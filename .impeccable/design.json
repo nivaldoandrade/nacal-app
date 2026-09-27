@@ -1,7 +1,7 @@
 {
   "schemaVersion": 2,
   "generatedAt": "2026-09-17T18:00:19Z",
-  "title": "Design System: NaFoodiary",
+  "title": "Design System: NaCal",
   "extensions": {
     "colorMeta": {
       "spring-lime": { "role": "primary", "displayName": "Spring Lime", "canonical": "#bef264", "tonalRamp": ["#1a2e05", "#3f5c0a", "#5c8710", "#7cae18", "#9ccf2e", "#b6e84e", "#d7f78f", "#f3fed1"] },
@@ -128,7 +128,7 @@
   ],
   "narrative": {
     "northStar": "The Fresh Plate",
-    "overview": "NaFoodiary is a food diary that refuses to feel like medicine. It trades the clinical precision of calorie counters for the ease of a friendly meal table: airy, garden-fresh surfaces in cloud white and soft mist, energized by a single bright lime accent, with every corner gently rounded. Screens breathe — spacing is generous, nothing crowds, and one glance is enough to understand the day. The aesthetic philosophy is fresh-squeezed optimism: optimistic without shouting, friendly without silliness, reassuring in flawless Brazilian Portuguese.\n\nThe system is a study in rationed color. Most of the interface is quiet: white panels on misty grays separated by hairline borders, tonal wells instead of shadows. Color arrives deliberately — spring lime for the single moment of action, four macro hues only where nutrition data is shown, and deep fern ink for the moments of ceremony (offer-your-plan, capture-your-meal) where the app asks the user to pause and trust it. Depth comes from stillness and tonal layering, not elevation.",
+    "overview": "NaCal is a food diary that refuses to feel like medicine. It trades the clinical precision of calorie counters for the ease of a friendly meal table: airy, garden-fresh surfaces in cloud white and soft mist, energized by a single bright lime accent, with every corner gently rounded. Screens breathe — spacing is generous, nothing crowds, and one glance is enough to understand the day. The aesthetic philosophy is fresh-squeezed optimism: optimistic without shouting, friendly without silliness, reassuring in flawless Brazilian Portuguese.\n\nThe system is a study in rationed color. Most of the interface is quiet: white panels on misty grays separated by hairline borders, tonal wells instead of shadows. Color arrives deliberately — spring lime for the single moment of action, four macro hues only where nutrition data is shown, and deep fern ink for the moments of ceremony (offer-your-plan, capture-your-meal) where the app asks the user to pause and trust it. Depth comes from stillness and tonal layering, not elevation.",
     "keyCharacteristics": ["Airy and optimistic: cloud-white panels over a lime-bright wash, generous spacing, nothing crowded.", "Soft geometry: every corner rounded (10–24px), pill hero CTAs, circular icon wells and recording rings.", "Tonal, not shadowy: depth from mist/fog wells and 1px borders; shadows only on floating actions.", "Reassuring, friendly br-PT voice throughout (\"Você pode inserir uma estimativa\", \"Só usada no momento da foto\").", "The MacroRainbow as signature: four colored arcs make daily progress legible at a glance."],
     "rules": [
       { "name": "The Fresh-Plate Rule", "body": "Spring lime is rationed. Page washes and selections use lime bright or leaf tint; full spring lime is reserved for the one element asking for a tap. Its rarity is the point.", "section": "colors" },

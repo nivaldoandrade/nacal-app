@@ -1,15 +1,15 @@
 {
   "expo": {
-    "name": "NaFoodiary",
-    "slug": "nafoodiary",
+    "name": "NaCal",
+    "slug": "nacal",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
-    "scheme": "nafoodiary",
+    "scheme": "nacal",
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.anonymous.app"
+      "bundleIdentifier": "com.nacal.app"
     },
     "android": {
       "adaptiveIcon": {
@@ -19,13 +19,13 @@
         "monochromeImage": "./assets/android-icon-monochrome.png"
       },
       "predictiveBackGestureEnabled": false,
-      "package": "com.anonymous.app"
+      "package": "com.nacal.app"
     },
     "web": {
       "bundler": "metro",
       "output": "single",
-      "name": "NaFoodiary",
-      "shortName": "NaFoodiary",
+      "name": "NaCal",
+      "shortName": "NaCal",
       "lang": "pt-BR",
       "description": "Controle sua dieta de forma simples.",
       "themeColor": "#e8fb86",

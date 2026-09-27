@@ -14,7 +14,7 @@ People tracking their diet day to day, logging what they eat on the go. Their jo
 
 ## Product Purpose
 
-NaFoodiary lets a person control their diet simply. "Controle sua dieta de forma simples." Success is a user who opens the app, logs a meal with a photo or a voice note, and immediately understands their daily progress against a macro plan generated from a short onboarding.
+NaCal lets a person control their diet simply. "Controle sua dieta de forma simples." Success is a user who opens the app, logs a meal with a photo or a voice note, and immediately understands their daily progress against a macro plan generated from a short onboarding.
 
 ## Positioning
 
@@ -44,7 +44,7 @@ Simple and friendly where nutrition trackers are rigid and clinical. The core me
 
 ## Brand Commitments
 
-- Name and wordmark: **NaFoodiary** (SVG logo; white wordmark, lime accent).
+- Name and wordmark: **NaCal** (wordmark + lime accent stroke; white on dark surfaces, fern on light).
 - Typography: Host Grotesk (300/400/500/600).
 - Palette: lime accent family, neutral grays, black/white, macro support colors (tomato = calories, teal = proteins, yellow = carbs, orange = fats).
 - Voice: friendly, simple, and reassuring br-PT ("Você pode inserir uma estimativa", "Só usada no momento da foto").

@@ -1,5 +1,5 @@
 ---
-name: NaFoodiary
+name: NaCal
 description: Controle sua dieta de forma simples — friendly macro tracking with photo and voice logging.
 colors:
   spring-lime: "#bef264"
@@ -157,13 +157,13 @@ components:
     height: "4px"
 ---
 
-# Design System: NaFoodiary
+# Design System: NaCal
 
 ## Overview
 
 **Creative North Star: "The Fresh Plate"**
 
-NaFoodiary is a food diary that refuses to feel like medicine. It trades the clinical precision of calorie counters for the ease of a friendly meal table: airy, garden-fresh surfaces in cloud white and soft mist, energized by a single bright lime accent, with every corner gently rounded. Screens breathe — spacing is generous, nothing crowds, and one glance is enough to understand the day. The aesthetic philosophy is fresh-squeezed optimism: optimistic without shouting, friendly without silliness, reassuring in flawless Brazilian Portuguese.
+NaCal is a food diary that refuses to feel like medicine. It trades the clinical precision of calorie counters for the ease of a friendly meal table: airy, garden-fresh surfaces in cloud white and soft mist, energized by a single bright lime accent, with every corner gently rounded. Screens breathe — spacing is generous, nothing crowds, and one glance is enough to understand the day. The aesthetic philosophy is fresh-squeezed optimism: optimistic without shouting, friendly without silliness, reassuring in flawless Brazilian Portuguese.
 
 The system is a study in rationed color. Most of the interface is quiet: white panels on misty grays separated by hairline borders, tonal wells instead of shadows. Color arrives deliberately — spring lime for the single moment of action, four macro hues only where nutrition data is shown, and deep fern ink for the moments of ceremony (offer-your-plan, capture-your-meal) where the app asks the user to pause and trust it. Depth comes from stillness and tonal layering, not elevation.
 

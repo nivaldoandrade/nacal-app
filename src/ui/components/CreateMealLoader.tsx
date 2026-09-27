@@ -72,8 +72,7 @@ export function CreateMealLoader({ visible }: ISplashScreenLoader) {
 
         <Logo
           width={150}
-          primaryColor={theme.colors.lime[900]}
-          secondaryColor={theme.colors.lime[700]}
+          variant='onLight'
         />
         <AppText color={theme.colors.lime[900]}>
           Está idenfiticando sua refeição

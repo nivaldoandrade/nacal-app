@@ -1,4 +1,4 @@
-# NaFoodiary — Expo app
+# NaCal — Expo app
 
 Expo SDK 57 / React Native 0.86 / React 19 / TypeScript strict. Expo APIs changed recently — read the versioned docs before writing code: https://docs.expo.dev/versions/v57.0.0/
 

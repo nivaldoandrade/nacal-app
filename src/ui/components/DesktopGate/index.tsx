@@ -28,7 +28,7 @@ export function DesktopGate({ children }: IDesktopGateProps) {
             macros. Tudo isso funciona melhor na palma da mão.
           </AppText>
           <AppText color={theme.colors.gray[700]} size='sm' style={styles.hint}>
-            Acesse a NaFoodiary pelo celular para continuar.
+            Acesse a NaCal pelo celular para continuar.
           </AppText>
         </View>
       </View>

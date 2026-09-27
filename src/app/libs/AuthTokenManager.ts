@@ -1,7 +1,7 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export class AuthTokenManager {
-  private static KEY = '@nafoodiary:authtokens';
+  private static KEY = '@nacal:authtokens';
 
   static async save(tokens: AuthTokenManager.Tokens) {
     await AsyncStorage.setItem(this.KEY, JSON.stringify(tokens));
