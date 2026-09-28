@@ -77,7 +77,7 @@ export function OnboardingProvider({ children }: IOnboardingProviderProps) {
     const previousStepIndex = currentStepIndex - 1;
 
     if (previousStepIndex < 0) {
-      navigation.goBack();
+      navigation.popToTop();
       return;
     }
 

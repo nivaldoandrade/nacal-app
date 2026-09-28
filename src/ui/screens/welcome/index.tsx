@@ -7,7 +7,7 @@ import { SignInBottomSheet } from '@/ui/components/SignInBottomSheet';
 import { ISignInBottomSheet } from '@/ui/components/SignInBottomSheet/ISignInBottomSheet';
 import { styles } from '@/ui/screens/welcome/styles';
 import { theme } from '@/ui/styles/theme';
-import { useFocusEffect, useNavigation, useRoute } from '@react-navigation/native';
+import { useFocusEffect, useIsFocused, useNavigation, useRoute } from '@react-navigation/native';
 import { LinearGradient } from 'expo-linear-gradient';
 import * as SystemUI from 'expo-system-ui';
 import { useCallback, useEffect, useRef } from 'react';
@@ -21,6 +21,7 @@ export function Welcome() {
   const insets = useSafeAreaInsets();
 
   const { shouldShowOnboarding } = useAuth();
+  const isFocused = useIsFocused();
 
   useFocusEffect(
     useCallback(() => {
@@ -34,10 +35,10 @@ export function Welcome() {
   );
 
   useEffect(() => {
-    if (shouldShowOnboarding) {
-      navigation.navigate('Onboarding');
+    if (shouldShowOnboarding && isFocused) {
+      navigation.navigate('OnboardingIntro');
     }
-  }, [shouldShowOnboarding, navigation]);
+  }, [shouldShowOnboarding, isFocused, navigation]);
 
   useEffect(() => {
     const email = route.params?.prefillEmail;
