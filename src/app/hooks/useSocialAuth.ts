@@ -28,6 +28,7 @@ export function useSocialAuth({ onSuccess }: IUseSocialAuthParams) {
     responseType: AuthSession.ResponseType.Code,
     extraParams: {
       identity_provider: 'Google',
+      prompt: 'select_account',
     },
   }, DISCOVERY);
 
