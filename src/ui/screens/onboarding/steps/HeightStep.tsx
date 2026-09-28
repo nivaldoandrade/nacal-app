@@ -1,29 +1,18 @@
 
-import { ButtonApp } from '@/ui/components/Button';
 import { MeasurementField } from '@/ui/components/Inputs/MeasurementField';
 import { Step, StepContent, StepDismissKeyboard, StepFooter, StepHeader, StepSubTitle, StepTitle } from '@/ui/screens/onboarding/components/Step';
+import { StepAdvanceButton } from '@/ui/screens/onboarding/components/StepAdvanceButton';
 import { useOnboarding } from '@/ui/screens/onboarding/context/useOnboarding';
 import { OnboardingSchema } from '@/ui/screens/onboarding/schema';
 import { formatHeight } from '@/ui/utils/formatMeasurement';
-import { ArrowRightIcon } from 'lucide-react-native';
 import { Controller, useFormContext } from 'react-hook-form';
 
 export function HeightStep() {
-  const { nextStep } = useOnboarding();
+  const { advance } = useOnboarding();
 
-  const { control, trigger, watch, clearErrors } = useFormContext<OnboardingSchema>();
+  const { control, watch, clearErrors } = useFormContext<OnboardingSchema>();
 
   const selectedHeight = watch('profile.height');
-
-  async function handleCheckAndNextStep() {
-    const isValid = await trigger('profile.height');
-
-    if (!isValid) {
-      return;
-    }
-
-    nextStep();
-  }
 
   return (
     <StepDismissKeyboard>
@@ -49,19 +38,13 @@ export function HeightStep() {
                 }}
                 error={fieldState.error?.message}
                 returnKeyType='next'
-                onSubmitEditing={handleCheckAndNextStep}
+                onSubmitEditing={() => advance('profile.height')}
               />
             )}
           />
         </StepContent>
         <StepFooter >
-          <ButtonApp
-            disabled={!selectedHeight}
-            size='icon'
-            onPress={handleCheckAndNextStep}
-          >
-            <ArrowRightIcon />
-          </ButtonApp>
+          <StepAdvanceButton field='profile.height' disabled={!selectedHeight} />
         </StepFooter>
       </Step>
     </StepDismissKeyboard>

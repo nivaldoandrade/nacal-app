@@ -1,29 +1,18 @@
 
-import { ButtonApp } from '@/ui/components/Button';
 import { MeasurementField } from '@/ui/components/Inputs/MeasurementField';
 import { Step, StepContent, StepDismissKeyboard, StepFooter, StepHeader, StepSubTitle, StepTitle } from '@/ui/screens/onboarding/components/Step';
+import { StepAdvanceButton } from '@/ui/screens/onboarding/components/StepAdvanceButton';
 import { useOnboarding } from '@/ui/screens/onboarding/context/useOnboarding';
 import { OnboardingSchema } from '@/ui/screens/onboarding/schema';
 import { formatWeight } from '@/ui/utils/formatMeasurement';
-import { ArrowRightIcon } from 'lucide-react-native';
 import { Controller, useFormContext } from 'react-hook-form';
 
 export function WeightStep() {
-  const { nextStep } = useOnboarding();
+  const { advance } = useOnboarding();
 
-  const { control, trigger, watch, clearErrors } = useFormContext<OnboardingSchema>();
+  const { control, watch, clearErrors } = useFormContext<OnboardingSchema>();
 
   const selectedWeight = watch('profile.weight');
-
-  async function handleCheckAndNextStep() {
-    const isValid = await trigger('profile.weight');
-
-    if (!isValid) {
-      return;
-    }
-
-    nextStep();
-  }
 
   return (
     <StepDismissKeyboard>
@@ -50,19 +39,13 @@ export function WeightStep() {
                 }}
                 error={fieldState.error?.message}
                 returnKeyType='next'
-                onSubmitEditing={handleCheckAndNextStep}
+                onSubmitEditing={() => advance('profile.weight')}
               />
             )}
           />
         </StepContent>
         <StepFooter >
-          <ButtonApp
-            disabled={!selectedWeight}
-            size='icon'
-            onPress={handleCheckAndNextStep}
-          >
-            <ArrowRightIcon />
-          </ButtonApp>
+          <StepAdvanceButton field='profile.weight' disabled={!selectedWeight} />
         </StepFooter>
       </Step>
     </StepDismissKeyboard>

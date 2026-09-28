@@ -2,8 +2,11 @@ import { useAuth } from '@/app/contexts/AuthContext/useAuth';
 import { AuthStackNavigatorProps, AuthStackParamList } from '@/app/navigation/AuthStack';
 import { OnboardingParamList } from '@/app/navigation/OnboardingStack';
 import { orderedSteps } from '@/ui/screens/onboarding/orderedSteps';
+import { OnboardingSchema } from '@/ui/screens/onboarding/schema';
+import { useOnboardingSubmit } from '@/ui/screens/onboarding/useOnboardingSubmit';
 import { useNavigation, useNavigationState } from '@react-navigation/native';
 import { createContext, useCallback, useMemo, type ReactNode } from 'react';
+import { Path, useFormContext } from 'react-hook-form';
 
 const ONBOARDING_ROUTE_NAME = 'Onboarding' satisfies keyof AuthStackParamList;
 
@@ -12,8 +15,10 @@ interface IOnboardingContextProps {
   currentStepIndex: number;
   totalStep: number;
   isLastStep: boolean;
+  isAdvanceLoading: boolean;
   nextStep: () => void;
   previousStep: () => void;
+  advance: (field: Path<OnboardingSchema>) => Promise<void>;
 }
 
 interface IOnboardingProviderProps {
@@ -26,6 +31,11 @@ export function OnboardingProvider({ children }: IOnboardingProviderProps) {
   const navigation = useNavigation<AuthStackNavigatorProps>();
 
   const { shouldShowOnboarding } = useAuth();
+  const { trigger } = useFormContext<OnboardingSchema>();
+
+  const { finishOnboarding, isSubmitting, isGoogleLoading } = useOnboardingSubmit({
+    flow: 'completeProfile',
+  });
 
   const flowSteps = useMemo(() => {
     return shouldShowOnboarding
@@ -80,14 +90,31 @@ export function OnboardingProvider({ children }: IOnboardingProviderProps) {
 
   const isLastStep = currentStepIndex === flowSteps.length - 1;
 
+  const advance = useCallback(async (field: Path<OnboardingSchema>) => {
+    const isValid = await trigger(field);
+
+    if (!isValid) {
+      return;
+    }
+
+    if (isLastStep && shouldShowOnboarding) {
+      await finishOnboarding();
+      return;
+    }
+
+    nextStep();
+  }, [trigger, isLastStep, shouldShowOnboarding, finishOnboarding, nextStep]);
+
   return (
     <OnboardingContext value={{
       currentStepIndex,
       nextStep,
       previousStep,
+      advance,
       initialStep: flowSteps[0],
       totalStep: flowSteps.length,
       isLastStep,
+      isAdvanceLoading: isSubmitting || isGoogleLoading,
     }}>
       {children}
     </ OnboardingContext>

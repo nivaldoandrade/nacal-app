@@ -1,8 +1,6 @@
 
 import { useAuth } from '@/app/contexts/AuthContext/useAuth';
-import { ErrorCode, getApiErrorCode, getErrorMessage } from '@/app/errors/apiErrors';
-import { useSocialAuth } from '@/app/hooks/useSocialAuth';
-import { AuthService } from '@/app/services/AuthService';
+import { getApiErrorCode, getErrorMessage } from '@/app/errors/apiErrors';
 import { ButtonApp } from '@/ui/components/Button';
 import { FormGroup } from '@/ui/components/FormGroup';
 import { GoogleIcon } from '@/ui/components/GoogleIcon';
@@ -11,6 +9,7 @@ import { NameInput } from '@/ui/components/Inputs/NameInput';
 import { OrDivider } from '@/ui/components/OrDivider';
 import { Step, StepContent, StepFooter, StepHeader, StepSubTitle, StepTitle } from '@/ui/screens/onboarding/components/Step';
 import { OnboardingSchema, OnboardingSchemaOutput } from '@/ui/screens/onboarding/schema';
+import { useOnboardingSubmit } from '@/ui/screens/onboarding/useOnboardingSubmit';
 import { theme } from '@/ui/styles/theme';
 import { useRef, useState } from 'react';
 import { Controller, useFormContext } from 'react-hook-form';
@@ -21,15 +20,12 @@ import { useSafeAreaInsets } from '@/ui/hooks/useSafeAreaInsets';
 export function CreateAccountStep() {
   const [footerHeight, setFooterHeight] = useState(0);
   const { bottom } = useSafeAreaInsets();
-  const { signUp, signInWithSocial, completeSocialOnboarding } = useAuth();
-  const { signInWithGoogle, isLoading: isGoogleLoading } = useSocialAuth({
-    onSuccess: handleGoogleOnSuccess,
-  });
+  const { signUp } = useAuth();
+  const { signInWithGoogle, isGoogleLoading } = useOnboardingSubmit({ flow: 'signUp' });
 
   const {
     control,
     setError,
-    getValues,
     handleSubmit: RHFHandleSubmit,
     formState: { isValid, isSubmitting },
   } = useFormContext<OnboardingSchema, unknown, OnboardingSchemaOutput>();
@@ -37,39 +33,6 @@ export function CreateAccountStep() {
   const emailInputRef = useRef<TextInput>(null);
   const passwordInputRef = useRef<TextInput>(null);
   const passwordConfirmInputRef = useRef<TextInput>(null);
-  const reauthAttemptedRef = useRef(false);
-
-  async function handleGoogleOnSuccess(response: AuthService.SignInWithSocial['response']) {
-    const isOnboarded = await signInWithSocial(response);
-
-    if (isOnboarded) {
-      return;
-    }
-
-    const profile = getValues('profile');
-
-    try {
-      await completeSocialOnboarding(response, {
-        birthDate: profile.birthDate.toISOString().split('T')[0],
-        height: Number(profile.height),
-        weight: Number(profile.weight),
-        gender: profile.gender,
-        goal: profile.goal,
-        activityLevel: profile.activityLevel,
-      });
-    } catch (error) {
-      if (
-        getApiErrorCode(error) === ErrorCode.INVALID_GRANT
-        && !reauthAttemptedRef.current
-      ) {
-        reauthAttemptedRef.current = true;
-        await signInWithGoogle();
-        return;
-      }
-
-      throw error;
-    }
-  }
 
   const handleSubmit = RHFHandleSubmit(async (data) => {
     try {
