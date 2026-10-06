@@ -24,4 +24,39 @@ export const styles = StyleSheet.create({
     borderTopWidth: 1,
     borderColor: theme.colors.gray[400],
   },
+
+  planSection: {
+    gap: 8,
+  },
+
+  planCard: {
+    backgroundColor: theme.colors.white,
+    borderWidth: 1,
+    borderColor: theme.colors.gray[400],
+    borderRadius: 16,
+    padding: 16,
+    gap: 12,
+  },
+
+  planRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+
+  planBadgePro: {
+    backgroundColor: theme.colors.lime['700/10'],
+    borderColor: theme.colors.lime[700],
+    borderWidth: 1,
+    borderRadius: 20,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+  },
+
+  planBadgeFree: {
+    backgroundColor: theme.colors.gray[200],
+    borderRadius: 20,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+  },
 });

@@ -2,17 +2,36 @@ import { Service } from '@/app/services/Service';
 import { ActivityLevel } from '@/app/types/ActivityLevel';
 import { Gender } from '@/app/types/Gender';
 import { Goal } from '@/app/types/Goal';
+import { MealQuota, Subscription } from '@/app/types/Subscription';
 
 export class AccountsService extends Service {
 
   static async me(): Promise<AccountsService.Me> {
     const { data } = await this.client.get<AccountsService.MeResponse>('me');
 
+    const subscription: Subscription | null = data.subscription
+      ? {
+        plan: data.subscription.plan,
+        planId: data.subscription.planId,
+        status: data.subscription.status,
+        trialEndsAt: data.subscription.trialEndsAt
+          ? new Date(data.subscription.trialEndsAt)
+          : null,
+        paidUntil: data.subscription.paidUntil
+          ? new Date(data.subscription.paidUntil)
+          : null,
+      }
+      : null;
+
+    const mealQuota = data.mealQuota;
+
     if (!data.isOnboarded || !data.profile || !data.goal) {
       return {
         isOnboarded: false,
         profile: null,
         goal: null,
+        subscription,
+        mealQuota,
       };
     }
 
@@ -23,6 +42,8 @@ export class AccountsService extends Service {
         birthDate: this.parseDateFromAPI(data.profile.birthDate),
       },
       goal: data.goal,
+      subscription,
+      mealQuota,
     };
   }
 
@@ -64,6 +85,14 @@ export namespace AccountsService {
       carbohydrates: number;
       fats: number;
     } | null;
+    subscription: {
+      plan: 'FREE' | 'PRO';
+      planId: Subscription['planId'];
+      status: Subscription['status'];
+      trialEndsAt?: string;
+      paidUntil?: string;
+    } | null;
+    mealQuota: MealQuota;
   };
 
   export type Me =
@@ -71,6 +100,8 @@ export namespace AccountsService {
         isOnboarded: false;
         profile: null;
         goal: null;
+        subscription: Subscription | null;
+        mealQuota: MealQuota;
       }
     | {
         isOnboarded: true;
@@ -78,6 +109,8 @@ export namespace AccountsService {
           birthDate: Date;
         };
         goal: NonNullable<MeResponse['goal']>;
+        subscription: Subscription | null;
+        mealQuota: MealQuota;
       };
 
   export type UpdateProfileParams = {

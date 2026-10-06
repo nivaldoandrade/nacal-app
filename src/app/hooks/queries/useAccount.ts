@@ -13,8 +13,16 @@ export function useAccount({ enabled = true }: IUseAccountParams = {}) {
     staleTime: Infinity,
   });
 
+  const subscription = data?.subscription ?? null;
+  const mealQuota = data?.mealQuota ?? null;
+
   return {
     account: data?.isOnboarded ? data : null,
+    subscription,
+    mealQuota,
+    plan: subscription?.plan ?? 'FREE',
+    isPro: (subscription?.plan ?? 'FREE') === 'PRO',
+    trialEndsAt: subscription?.trialEndsAt ?? null,
     loadAccount: refetch,
   };
 };

@@ -1,11 +1,12 @@
 import { useAuth } from '@/app/contexts/AuthContext/useAuth';
-import { AppStack } from '@/app/navigation/AppStack';
+import { AppStack, AppStackParamlist } from '@/app/navigation/AppStack';
 import { AuthStack } from '@/app/navigation/AuthStack';
+import { NavigatorScreenParams } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 
 export type RootParamList = {
   Auth: undefined;
-  App: undefined;
+  App: NavigatorScreenParams<AppStackParamlist>;
 }
 
 const Stack = createNativeStackNavigator<RootParamList>();

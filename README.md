@@ -30,6 +30,7 @@ Este repositório contém o **app frontend** (web + iOS + Android). O backend é
 - **Detalhes da refeição**: Total de calorias e quebra de macros por alimento e da refeição;
 - **Metas editáveis**: Override manual do plano derivado (calorias, proteínas, carboidratos e gorduras);
 - **Perfil editável**: Nome, data de nascimento, altura, peso e gênero;
+- **Planos e assinatura**: Free com **20 refeições AI/mês** e Pro (**R$ 9,99/mês** ou **R$ 99,90/ano**) ilimitado; **trial de 7 dias grátis** sem cartão (1 por conta), checkout via Asaas, cancelamento na tela de Planos e ativação via webhook refletida em `GET /me`;
 - **Web + PWA**: Export estático instalável com ícones, manifest e splash, além dos builds nativos iOS e Android;
 - **Paridade web/nativo**: branching por `Platform.OS` para date picker, vídeo, toasts, handling de arquivos e animações;
 - **Toasts**: `sonner` na web e `sonner-native` no nativo, com import centralizado em `@/app/libs/sonner`.
@@ -54,6 +55,7 @@ Este repositório contém o **app frontend** (web + iOS + Android). O backend é
 | `MealDetails` | Detalhes da refeição: status de processamento, calorias e macros (por alimento e total) |
 | `EditGoals`   | Edição manual das metas diárias de calorias e macros                                    |
 | `Profile`     | Edição do perfil e acesso às metas                                                      |
+| `Plans`       | Planos Free vs Pro, trial, cota mensal, checkout (Asaas) e cancelamento                 |
 
 A troca entre as stacks é dirigida pelo `AuthContext`: `RootStack` renderiza `Auth` enquanto `!isSignedIn || shouldShowOnboarding`, e `App` caso contrário.
 
@@ -78,12 +80,13 @@ O app é dividido em **duas camadas** com path aliases definidos no `tsconfig.js
 │  src/app  ·  lógica  (alias @/app/*)                             │
 │                                                                  │
 │  hooks/queries/     useAccount · useListMealByDay ·              │
-│                     useGetMealById                               │
+│                     useGetMealById · useGetPlans                 │
 │  hooks/mutations/   useCreateMeal · useUpdateGoal ·              │
-│                     useUpdateProfile                             │
+│                     useUpdateProfile · billing (trial/checkout/  │
+│                     cancel)                                      │
 │  services/          Service (axios + interceptor 401→refresh) ·  │
 │                     AuthService · AccountsService ·              │
-│                     MealsService · GoalService                   │
+│                     MealsService · GoalService · BillingService  │
 │  contexts/          AuthContext (isSignedIn · onboarding)        │
 │  navigation/        RootStack → AuthStack | AppStack             │
 │  libs/              AuthTokenManager · queryClient · sonner      │
@@ -113,6 +116,23 @@ Tela (src/ui)
 4. O backend cria a refeição e dispara o processamento: o status avança por `UPLOADING → QUEUED → PROCESSING`;
 5. Enquanto o status é de processamento, `useGetMealById` refaz a consulta a cada **3 segundos** até `SUCCESS` ou `FAILED`;
 6. Em `SUCCESS`, a tela de detalhes mostra os alimentos, calorias e macros.
+
+### Planos e pagamento (billing)
+
+A tela `Plans` consome a API de billing (gateway Asaas). O webhook é exclusivo da API — o app nunca fala com o gateway:
+
+| Endpoint             | Auth | Uso no app                                                                       |
+| -------------------- | ---- | -------------------------------------------------------------------------------- |
+| `GET /billing/plans` | JWT  | Catálogo (preço, ciclo, features) — `staleTime: Infinity`                        |
+| `POST /billing/trial` | JWT | Trial de 7 dias (1 por conta) → `{ trialEndsAt }`                                |
+| `POST /billing/checkout` | JWT | Cria o checkout Asaas → `{ checkoutUrl, expiresAt }`                          |
+| `POST /billing/cancel` | JWT | Cancela trial (local) ou assinatura (gateway)                                   |
+| `GET /me`            | JWT  | Reflete `subscription` (plan, status, trialEndsAt, paidUntil) + `mealQuota`       |
+
+- **Web**: redirect na mesma aba — flag `nacal:checkout:pending` no `sessionStorage`, retorno em `/billing/return`, confirmação automática no `/me` (botão "Já paguei" como retry manual);
+- **Native**: `WebBrowser.openAuthSessionAsync` + loop de confirmação no `/me`;
+- **Cota FREE**: estourou a 21ª refeição do mês → `403 FREE_QUOTA_EXCEEDED` → toast + navegação para `Plans`;
+- `POST /billing/webhooks/asaas` (público) roda só na API e é a fonte da verdade da ativação.
 
 ## Pré-requisitos
 
@@ -154,6 +174,9 @@ cp .env.example .env
 EXPO_PUBLIC_API_URL=https://xxx.execute-api.sa-east-1.amazonaws.com
 EXPO_PUBLIC_COGNITO_DOMAIN=https://xxxx.auth.sa-east-1.amazoncognito.com
 EXPO_PUBLIC_COGNITO_CLIENT_ID=xxxxxxxxxxxxxxxxxxxxxxxxxx
+
+# Opcional: returnUrl do checkout web (deve bater com o allowlist APP_WEB_URL da API)
+# EXPO_PUBLIC_WEB_URL=https://192.168.100.21:8443
 ```
 
 ### 4. Inicie a aplicação
@@ -178,6 +201,7 @@ yarn android  # emulador/dispositivo Android (expo run:android)
 | `EXPO_PUBLIC_API_URL`           | URL base da NaCal API                                                               | Sim         |
 | `EXPO_PUBLIC_COGNITO_DOMAIN`    | Domínio do Cognito User Pool (ex.: `https://xxxx.auth.sa-east-1.amazoncognito.com`) | Sim         |
 | `EXPO_PUBLIC_COGNITO_CLIENT_ID` | Client ID do aplicativo no User Pool                                                | Sim         |
+| `EXPO_PUBLIC_WEB_URL`           | URL pública do app web usada como `returnUrl` do checkout — deve passar pelo allowlist `APP_WEB_URL` da API (fallback web: `window.location.origin`; fallback native: `makeRedirectUri`) | Não         |
 
 **Regras importantes:**
 
@@ -225,19 +249,22 @@ src/
 │   │   └── AuthContext/        # isSignedIn, shouldShowOnboarding, refresh
 │   ├── errors/
 │   ├── hooks/
-│   │   ├── queries/            # useAccount, useListMealByDay, useGetMealById
-│   │   ├── mutations/          # useCreateMeal, useUpdateGoal, useUpdateProfile
+│   │   ├── queries/            # useAccount, useListMealByDay, useGetMealById,
+│   │   │                       # useGetPlans
+│   │   ├── mutations/          # useCreateMeal, useUpdateGoal, useUpdateProfile,
+│   │   │                       # useStartTrial, useCreateCheckout, useCancelSubscription
 │   │   └── useSocialAuth.ts    # Google OAuth 2.0 + PKCE
 │   ├── libs/
 │   │   ├── AuthTokenManager.ts # persistência de tokens (AsyncStorage)
 │   │   ├── queryClient.ts      # retry: false
 │   │   ├── sonner.ts           # platform-split de toast (web/native)
+│   │   ├── getCheckoutReturnUrl.ts  # returnUrl do checkout Asaas
 │   │   └── getFileInfo.ts
 │   ├── navigation/             # RootStack, AuthStack, AppStack, OnboardingStack
 │   ├── services/               # Service (axios + interceptor 401)
 │   │                           # AuthService, AccountsService,
-│   │                           # MealsService, GoalService
-│   ├── types/                  # Meal, Food, ...
+│   │                           # MealsService, GoalService, BillingService
+│   ├── types/                  # Meal, Food, Subscription, ...
 │   └── utils/
 │
 └── ui/                         # Apresentação (alias @/ui/*)
@@ -251,7 +278,8 @@ src/
     │   ├── home/               # components/ (WeekCalendar, CurrentGoal, Fab, ...)
     │   ├── mealDetails/
     │   ├── editGoals/
-    │   └── profile/
+    │   ├── profile/
+    │   └── plans/               # index.tsx · styles.ts · usePlansScreen.ts · components/
     ├── hooks/
     ├── styles/
     └── utils/
@@ -324,7 +352,7 @@ yarn serve:web    # serve dist/ localmente (npx serve dist)
 | [`DESIGN.md`](./DESIGN.md)                               | Design system: cores, tipografia, layout, componentes e regras nomeadas  |
 | [`AGENTS.md`](./AGENTS.md)                               | Convenções do código, comandos e gotchas (o `CLAUDE.md` aponta para ele) |
 | [`scripts/README.md`](./scripts/README.md)               | Geração de ícones e arte de splash                                       |
-| [NaCal API](https://github.com/nivaldoandrade/nacal-api) | Backend serverless consumido pelo app (auth, perfil, metas e refeições)  |
+| [NaCal API](https://github.com/nivaldoandrade/nacal-api) | Backend serverless consumido pelo app (auth, perfil, metas, refeições e billing)     |
 
 ## Troubleshooting
 

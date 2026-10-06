@@ -1,5 +1,6 @@
 import { useCreateMeal } from '@/app/hooks/mutations/useCreateMeal';
 import { useGetMealById } from '@/app/hooks/queries/useGetMealById';
+import { getApiErrorCode, getErrorMessage } from '@/app/errors/apiErrors';
 import { AppStackNavigatorProps } from '@/app/navigation/AppStack';
 import { toast } from '@/app/libs/sonner';
 import { ActionType } from '@/ui/components/AudioModal';
@@ -107,6 +108,14 @@ export function useAudioModal({ visible, onRequestClose }: IUseAudioModalParams)
       await createMeal(recordedUri);
     } catch (error) {
       console.error(error);
+
+      if (getApiErrorCode(error) === 'FREE_QUOTA_EXCEEDED') {
+        onRequestClose('fade');
+        toast.error(getErrorMessage('FREE_QUOTA_EXCEEDED'));
+        navigate('Plans');
+        return;
+      }
+
       toast.error('Ocorreu um erro ao criar a sua refeição. Tente novamente!');
     }
   }

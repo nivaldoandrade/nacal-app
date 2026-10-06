@@ -28,6 +28,7 @@ Simple and friendly where nutrition trackers are rigid and clinical. The core me
 - Day-based view: a weekly calendar with today's meals and macro progress vs. goal.
 - Auth via Cognito: Google (OAuth2 + PKCE) and email/password; tokens persist in AsyncStorage with silent refresh on 401.
 - Files upload via presigned POST (S3-style, base64-encoded signature).
+- Monetization: Free plan with 20 AI meals/month; Pro plan (R$ 9.99/month or R$ 99.90/year) unlocks unlimited meals. Checkout runs on the hosted Asaas page — web redirects in the same tab, native uses `openAuthSessionAsync` — and activation arrives via webhook, reflected through `GET /me`.
 
 ## Capabilities and Constraints
 
@@ -38,6 +39,9 @@ Simple and friendly where nutrition trackers are rigid and clinical. The core me
 - Goals are editable (manual override of the derived plan). Profile is editable (name, birth date, height, weight, gender).
 - Camera permission is used only at the moment of capture; the app states this to the user.
 - Audio notes capped at 30 seconds.
+- Free plan: 20 AI meals per calendar month (backend-enforced; the 403 `FREE_QUOTA_EXCEEDED` response routes the user to the Plans screen). Pro plan: unlimited meals.
+- Plans screen: Free vs Pro comparison, 7-day free trial with no card (one per account), monthly/yearly checkout, next-charge status, and cancellation (trial downgrades immediately; paid keeps access until `paidUntil`).
+- Subscription state (`plan`, `status`, `trialEndsAt`, `paidUntil`) and `mealQuota` are read from `GET /me`; the Plans screen revalidates on focus.
 - App is Expo SDK 57 / React Native 0.86, React Navigation 7, TanStack Query (staleTime Infinity), react-hook-form + zod, axios, Expo camera/audio/video/auth-session, Host Grotesk font, react-native-svg.
 - Both web and native builds must remain functional and feature-parity (Platform.OS-branched code exists for date picker, video, toasts, file handling).
 - Undecided: none beyond the platform sequencing above.
