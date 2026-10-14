@@ -5,10 +5,12 @@ import { Header } from '@/ui/screens/home/components/Header';
 import { ItemSeparatorComponent } from '@/ui/screens/home/components/ItemSeparatorComponent';
 import { ListEmpty } from '@/ui/screens/home/components/ListEmpty';
 import { MealItem } from '@/ui/screens/home/components/MealItem';
+import { PlanOfferModal } from '@/ui/screens/home/components/PlanOfferModal';
 import { PlanSummaryModal } from '@/ui/screens/home/components/PlanSummaryModal';
 import { SplashScreenLoader } from '@/ui/screens/home/components/SplashScreenLoader';
 import { HomeProvider } from '@/ui/screens/home/context';
 import { styles } from '@/ui/screens/home/styles';
+import { useFirstRunModals } from '@/ui/screens/home/useFirstRunModals';
 import { useHome } from '@/ui/screens/home/useHome';
 import { theme } from '@/ui/styles/theme';
 import { useFocusEffect } from '@react-navigation/native';
@@ -37,6 +39,7 @@ export function Home() {
     finalizeCreateMealModalClose,
     handleSelectDate,
   } = useHome();
+  const { showSummary, showOffer, dismissSummary, dismissOffer } = useFirstRunModals();
 
   useFocusEffect(
     useCallback(() => {
@@ -60,7 +63,8 @@ export function Home() {
   return (
     <View style={[styles.container]}>
       <StatusBar style='dark' />
-      <PlanSummaryModal />
+      <PlanSummaryModal visible={showSummary} onRequestClose={dismissSummary} />
+      <PlanOfferModal visible={!showOffer} onRequestClose={dismissOffer} />
 
       <HomeProvider
         meals={meals}
