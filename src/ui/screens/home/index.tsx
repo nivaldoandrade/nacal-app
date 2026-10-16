@@ -64,7 +64,7 @@ export function Home() {
     <View style={[styles.container]}>
       <StatusBar style='dark' />
       <PlanSummaryModal visible={showSummary} onRequestClose={dismissSummary} />
-      <PlanOfferModal visible={!showOffer} onRequestClose={dismissOffer} />
+      <PlanOfferModal visible={showOffer} onRequestClose={dismissOffer} />
 
       <HomeProvider
         meals={meals}
