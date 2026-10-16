@@ -37,6 +37,10 @@ yarn-error.*
 # impeccable tooling & local config
 .opencode/
 .impeccable/*.local.json
+.impeccable/mocks/
+.impeccable/questions/
+.impeccable/review/
+.impeccable/surfaces/
 
 # typescript
 *.tsbuildinfo
