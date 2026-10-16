@@ -1,8 +1,9 @@
 import { getFileInfo } from '@/app/libs/getFileInfo';
 import { MealsService } from '@/app/services/MealsService';
-import { useMutation } from '@tanstack/react-query';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 
 export function useCreateMeal() {
+  const queryClient = useQueryClient();
 
   const { data, mutateAsync, isPending } = useMutation({
     mutationFn: async (fileOrUri: string) => {
@@ -15,6 +16,9 @@ export function useCreateMeal() {
         filename,
         file,
       });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['accounts'] });
     },
   });
 

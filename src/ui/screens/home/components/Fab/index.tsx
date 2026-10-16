@@ -1,7 +1,9 @@
+import { useAccount } from '@/app/hooks/queries/useAccount';
 import { AppText } from '@/ui/components/AppText';
 import { ButtonApp } from '@/ui/components/Button';
 import type { CreateMealModalType } from '@/ui/components/CreateMealModals';
 import { CreateMealOptions } from '@/ui/components/CreateMealOptions';
+import { FreeQuotaNotice } from '@/ui/components/FreeQuotaNotice';
 import { styles } from '@/ui/screens/home/components/Fab/styles';
 import { useHomeContext } from '@/ui/screens/home/context/useHomeContext';
 import { BottomSheetModal, BottomSheetView } from '@gorhom/bottom-sheet';
@@ -12,11 +14,18 @@ import { useSafeAreaInsets } from '@/ui/hooks/useSafeAreaInsets';
 
 export function Fab() {
   const { onOpenCreateMealModal } = useHomeContext();
+  const { loadAccount, mealQuota } = useAccount();
 
   const { bottom } = useSafeAreaInsets();
   const bottomSheetModalRef = useRef<BottomSheetModal>(null);
 
+  const isQuotaExhausted =
+    mealQuota !== null &&
+    mealQuota.remaining !== null &&
+    mealQuota.remaining <= 0;
+
   function handleOpenCreateMealOptions() {
+    loadAccount();
     bottomSheetModalRef.current?.present();
   }
 
@@ -51,7 +60,8 @@ export function Fab() {
           <AppText size='xl' weight='semiBold' style={{ letterSpacing: -0.4 }}>
             Cadastre sua refeição
           </AppText>
-          <CreateMealOptions onSelect={handleSelectCreateMealOption} />
+          <CreateMealOptions disabled={isQuotaExhausted} onSelect={handleSelectCreateMealOption} />
+          <FreeQuotaNotice />
         </BottomSheetView>
       </BottomSheetModal>
     </>

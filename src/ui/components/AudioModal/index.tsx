@@ -4,6 +4,7 @@ import { styles } from '@/ui/components/AudioModal/styles';
 import { useAudioModal } from '@/ui/components/AudioModal/useAudioModal';
 import { CreateMealLoader } from '@/ui/components/CreateMealLoader';
 import { CreateMealModalAnimationType } from '@/ui/components/CreateMealModals';
+import { FreeQuotaNotice } from '@/ui/components/FreeQuotaNotice';
 import {
   ModalContent,
   ModalFooter,
@@ -72,6 +73,7 @@ export function AudioModal({
           recordedUri={recordedUri}
           audioRecorder={audioRecorder}
         />
+        <FreeQuotaNotice variant='dark' />
       </ModalFooter>
     </ModalWrapper>
   );

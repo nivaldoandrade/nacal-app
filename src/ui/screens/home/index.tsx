@@ -13,6 +13,7 @@ import { styles } from '@/ui/screens/home/styles';
 import { useFirstRunModals } from '@/ui/screens/home/useFirstRunModals';
 import { useHome } from '@/ui/screens/home/useHome';
 import { theme } from '@/ui/styles/theme';
+import { isSameDate } from '@/ui/utils/isSameDate';
 import { useFocusEffect } from '@react-navigation/native';
 import { StatusBar } from 'expo-status-bar';
 import * as SystemUI from 'expo-system-ui';
@@ -95,7 +96,7 @@ export function Home() {
           ItemSeparatorComponent={ItemSeparatorComponent}
           renderItem={renderItem}
         />
-        {meals.length > 0 && <Fab />}
+        {isSameDate(selectedDate, new Date()) && <Fab />}
       </HomeProvider>
 
       {activeCreateMealModal && (
