@@ -1,6 +1,8 @@
 import { useAuth } from '@/app/contexts/AuthContext/useAuth';
 import { useListMealByDay } from '@/app/hooks/queries/useListMealByDay';
+import { AppStackNavigatorProps } from '@/app/navigation/AppStack';
 import type { CreateMealModalAnimationType, CreateMealModalType } from '@/ui/components/CreateMealModals';
+import { useNavigation } from '@react-navigation/native';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useSafeAreaInsets } from '@/ui/hooks/useSafeAreaInsets';
 
@@ -15,6 +17,7 @@ export function useHome() {
 
   const createMealModalCloseTimeoutRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const { isSignedUp } = useAuth();
+  const navigation = useNavigation<AppStackNavigatorProps>();
 
   const clearPendingCreateMealModalClose = useCallback(() => {
     if (createMealModalCloseTimeoutRef.current) {
@@ -45,6 +48,14 @@ export function useHome() {
       CREATE_MEAL_MODAL_EXIT_DURATION,
     );
   }, [clearPendingCreateMealModalClose, finalizeCreateMealModalClose]);
+
+  useEffect(() => {
+    const unsubscribe = navigation.addListener('blur', () => {
+      handleRequestCloseCreateMealModal('fade');
+    });
+
+    return unsubscribe;
+  }, [navigation, handleRequestCloseCreateMealModal]);
 
   useEffect(() => clearPendingCreateMealModalClose, [clearPendingCreateMealModalClose]);
 
