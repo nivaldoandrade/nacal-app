@@ -25,7 +25,7 @@ Este repositório contém o **app frontend** (web + iOS + Android). O backend é
 - **Sessão silenciosa**: Tokens persistem em AsyncStorage e o access token é renovado automaticamente em respostas `401` (interceptor de refresh no axios);
 - **Onboarding em 7 etapas**: Objetivo, gênero, data de nascimento, altura, peso, nível de atividade e criação de conta: o backend deriva o plano diário de calorias e macros (TDEE/BMR);
 - **Home com visão do dia**: Calendário semanal, progresso dos macros no **MacroRainbow**, lista das refeições do dia e pull-to-refresh;
-- **Registro de refeição por foto ou áudio**: Captura de câmera (permissão usada somente no momento da foto) ou nota de voz com limite de **30 segundos** e playback para revisar antes de enviar;
+- **Registro de refeição por foto ou áudio**: Captura de câmera (permissão usada somente no momento da foto) ou nota de voz com limite de **30 segundos** e playback para revisar antes de enviar; o app envia o **fuso do dispositivo** para a API nomear e classificar a refeição pelo horário local;
 - **Processamento assíncrono**: Upload da refeição e acompanhamento do status `UPLOADING → QUEUED → PROCESSING → SUCCESS/FAILED` (polling de 3s enquanto processa);
 - **Detalhes da refeição**: Total de calorias e quebra de macros por alimento e da refeição;
 - **Metas editáveis**: Override manual do plano derivado (calorias, proteínas, carboidratos e gorduras);
@@ -112,10 +112,10 @@ Tela (src/ui)
 
 1. Usuário toca no FAB da home e escolhe **foto** ou **áudio** (máx. 30s);
 2. `PhotoModal` (câmera) ou `AudioModal` (gravação + playback) captura o arquivo;
-3. `useCreateMeal` envia para `MealsService.create`, que chama `POST /create-meal` e faz o upload direto no S3 via **Presigned POST** (assinatura em base64);
+3. `useCreateMeal` envia para `MealsService.create`, que chama `POST /create-meal` (com o `timeZone` IANA do dispositivo, via `expo-localization`) e faz o upload direto no S3 via **Presigned POST** (assinatura em base64);
 4. O backend cria a refeição e dispara o processamento: o status avança por `UPLOADING → QUEUED → PROCESSING`;
 5. Enquanto o status é de processamento, `useGetMealById` refaz a consulta a cada **3 segundos** até `SUCCESS` ou `FAILED`;
-6. Em `SUCCESS`, a tela de detalhes mostra os alimentos, calorias e macros.
+6. Em `SUCCESS`, a tela de detalhes mostra o nome/ícone da refeição (definidos pela API a partir do horário) e os alimentos, calorias e macros.
 
 ### Planos e pagamento (billing)
 
@@ -313,7 +313,7 @@ src/
 - [TanStack Query 5](https://tanstack.com/query): cache e mutações;
 - [react-hook-form](https://react-hook-form.com/) + [Zod](https://zod.dev/): formulários e validação;
 - [Axios](https://axios-http.com/): client HTTP com interceptor de refresh;
-- Expo modules: `camera`, `audio`, `video`, `auth-session`, `crypto`, `file-system`, `font`, `splash-screen`, `web-browser`, `linear-gradient`;
+- Expo modules: `camera`, `audio`, `video`, `auth-session`, `crypto`, `file-system`, `font`, `localization`, `splash-screen`, `web-browser`, `linear-gradient`;
 - `react-native-reanimated` 4 + `react-native-worklets`: animações;
 - `react-native-gesture-handler`, `react-native-safe-area-context`, `react-native-screens`, `react-native-svg`, `react-native-keyboard-controller`;
 - `@gorhom/bottom-sheet`;
