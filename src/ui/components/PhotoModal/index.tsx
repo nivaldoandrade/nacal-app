@@ -4,11 +4,12 @@ import { CreateMealLoader } from '@/ui/components/CreateMealLoader';
 import type { CreateMealModalAnimationType } from '@/ui/components/CreateMealModals';
 import { FreeQuotaNotice } from '@/ui/components/FreeQuotaNotice';
 import { ModalContent, ModalFooter, ModalHeader, ModalWrapper } from '@/ui/components/ModalWrapper';
+import { CameraCapture } from '@/ui/components/PhotoModal/components/CameraCapture/CameraCapture';
 import { PhotoActions } from '@/ui/components/PhotoModal/PhotoActions';
 import { styles } from '@/ui/components/PhotoModal/styles';
 import { usePhotoModal } from '@/ui/components/PhotoModal/usePhotoModal';
 import { theme } from '@/ui/styles/theme';
-import { CameraView } from 'expo-camera';
+import { PermissionStatus } from 'expo-camera';
 import { CameraIcon, LockIcon } from 'lucide-react-native';
 import { Image, View } from 'react-native';
 
@@ -32,6 +33,7 @@ export function PhotoModal({
     photoActionType,
     permission,
     photoUri,
+    isCapturing,
     cameraRef,
     requestPermission,
     handleTakePicture,
@@ -72,6 +74,13 @@ export function PhotoModal({
               seu dispositivo.
             </AppText>
 
+            {permission.status === PermissionStatus.DENIED && (
+              <AppText size='xs' color={theme.colors.gray[400]} style={{ textAlign: 'center' }}>
+                Se a câmera estiver bloqueada, permita o acesso nas
+                configurações do seu celular.
+              </AppText>
+            )}
+
             <View style={styles.privacyBadge}>
               <LockIcon
                 size={11}
@@ -87,9 +96,8 @@ export function PhotoModal({
         {visible && permission.granted && (
           <>
             {!photoUri ? (
-              <CameraView
+              <CameraCapture
                 ref={cameraRef}
-                facing='back'
                 style={styles.cameraAndPhotoContainer}
               />
             ) : (
@@ -113,6 +121,7 @@ export function PhotoModal({
         {permission.granted && (
           <PhotoActions
             actionType={photoActionType}
+            isCapturing={isCapturing}
             onTakePicture={handleTakePicture}
             onTryAgain={handleTryAgain}
             onSend={handleSend}

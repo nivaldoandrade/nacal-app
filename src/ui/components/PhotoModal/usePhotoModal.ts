@@ -4,10 +4,11 @@ import { getApiErrorCode, getErrorMessage } from '@/app/errors/apiErrors';
 import { toast } from '@/app/libs/sonner';
 import { AppStackNavigatorProps } from '@/app/navigation/AppStack';
 import type { CreateMealModalAnimationType } from '@/ui/components/CreateMealModals';
+import type { ICameraCaptureRef } from '@/ui/components/PhotoModal/components/CameraCapture/CameraCapture.types';
 import { PhotoActionType } from '@/ui/components/PhotoModal';
 import { useNavigation } from '@react-navigation/native';
 import { useQueryClient } from '@tanstack/react-query';
-import { CameraView, useCameraPermissions } from 'expo-camera';
+import { useCameraPermissions } from 'expo-camera';
 import { useEffect, useRef, useState } from 'react';
 import { Platform } from 'react-native';
 
@@ -18,9 +19,11 @@ interface IUsePhotoModalParams {
 export function usePhotoModal({ onRequestClose }: IUsePhotoModalParams) {
   const [photoActionType, setPhotoActionType] = useState<PhotoActionType>('takePhoto');
   const [photoUri, setPhotoUri] = useState<string | null>(null);
+  const [isCapturing, setIsCapturing] = useState(false);
 
   const [permission, requestPermission] = useCameraPermissions();
-  const cameraRef = useRef<CameraView>(null);
+  const cameraRef = useRef<ICameraCaptureRef>(null);
+  const isCapturingRef = useRef(false);
 
   const queryClient = useQueryClient();
   const { navigate, addListener } = useNavigation<AppStackNavigatorProps>();
@@ -83,13 +86,23 @@ export function usePhotoModal({ onRequestClose }: IUsePhotoModalParams) {
   }
 
   async function handleTakePicture() {
-    if (!cameraRef.current) {
+    if (!cameraRef.current || isCapturingRef.current) {
       return;
     }
 
-    const photo = await cameraRef.current.takePictureAsync();
-    setPhotoUri(photo.uri);
-    setPhotoActionType('reviewing');
+    isCapturingRef.current = true;
+    setIsCapturing(true);
+
+    try {
+      const photo = await cameraRef.current.takePictureAsync();
+      setPhotoUri(photo.uri);
+      setPhotoActionType('reviewing');
+    } catch {
+      toast.error('Não conseguimos tirar a foto. Tente novamente.');
+    } finally {
+      isCapturingRef.current = false;
+      setIsCapturing(false);
+    }
   }
 
   const isCreateMealLoaderVisible =
@@ -103,6 +116,7 @@ export function usePhotoModal({ onRequestClose }: IUsePhotoModalParams) {
     photoActionType,
     permission,
     photoUri,
+    isCapturing,
     cameraRef,
     requestPermission,
     handleTakePicture,

@@ -7,6 +7,7 @@ import { View } from 'react-native';
 
 interface IPhotoActionsProps {
   actionType?: PhotoActionType;
+  isCapturing?: boolean;
   onTakePicture: () => Promise<void>;
   onTryAgain: () => void;
   onSend: () => void;
@@ -14,6 +15,7 @@ interface IPhotoActionsProps {
 
 export function PhotoActions({
   actionType,
+  isCapturing = false,
   onTakePicture,
   onTryAgain,
   onSend,
@@ -25,6 +27,8 @@ export function PhotoActions({
         <ButtonApp
           intent='neutral'
           size='icon'
+          disabled={isCapturing}
+          isLoading={isCapturing}
           onPress={onTakePicture}
         >
           <CameraIcon size={20} color={theme.colors.lime[600]} />
