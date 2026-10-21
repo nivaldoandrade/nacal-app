@@ -35,6 +35,33 @@
         flex: 1;
       }
     </style>
+    <style id="pwa-zoom-lock-css">
+      html.pwa-standalone,
+      html.pwa-standalone body {
+        touch-action: pan-x pan-y;
+      }
+    </style>
+    <script id="pwa-zoom-lock">
+      (function () {
+        var isStandalone =
+          window.navigator.standalone === true ||
+          window.matchMedia('(display-mode: standalone)').matches;
+
+        if (!isStandalone) {
+          return;
+        }
+
+        document.documentElement.classList.add('pwa-standalone');
+
+        function preventZoom(event) {
+          event.preventDefault();
+        }
+
+        document.addEventListener('gesturestart', preventZoom, { passive: false });
+        document.addEventListener('gesturechange', preventZoom, { passive: false });
+        document.addEventListener('gestureend', preventZoom, { passive: false });
+      })();
+    </script>
     <style id="pwa-splash-css">
       /* Splash de primeiro paint — paridade com a splash nativa (expo-splash-screen).
          O id deste <style> NÃO pode ser "pwa-splash": getElementById retorna o
