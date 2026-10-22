@@ -25,8 +25,9 @@ Este repositório contém o **app frontend** (web + iOS + Android). O backend é
 - **Sessão silenciosa**: Tokens persistem em AsyncStorage e o access token é renovado automaticamente em respostas `401` (interceptor de refresh no axios);
 - **Onboarding em 7 etapas**: Objetivo, gênero, data de nascimento, altura, peso, nível de atividade e criação de conta: o backend deriva o plano diário de calorias e macros (TDEE/BMR);
 - **Home com visão do dia**: Calendário semanal, progresso dos macros no **MacroRainbow**, lista das refeições do dia e pull-to-refresh;
-- **Registro de refeição por foto ou áudio**: Captura de câmera (permissão usada somente no momento da foto) ou nota de voz com limite de **30 segundos** e playback para revisar antes de enviar; o app envia o **fuso do dispositivo** para a API nomear e classificar a refeição pelo horário local;
-- **Processamento assíncrono**: Upload da refeição e acompanhamento do status `UPLOADING → QUEUED → PROCESSING → SUCCESS/FAILED` (polling de 3s enquanto processa);
+- **Registro de refeição por foto ou áudio**: Captura de câmera (permissão usada somente no momento da foto) ou nota de voz com limite de **30 segundos** e playback para revisar antes de enviar; as fotos são normalizadas para JPEG (lado maior de 1024px, qualidade 0.9) e o app envia o **fuso do dispositivo** para a API nomear e classificar a refeição pelo horário local;
+- **Processamento assíncrono**: Upload da refeição e acompanhamento do status `UPLOADING → QUEUED → PROCESSING → SUCCESS | REJECTED | FAILED` (polling de 3s enquanto processa);
+- **Rejeição amigável**: Fotos sem comida, áudios sem fala e arquivos inválidos viram `REJECTED`, com toast explicativo, reset da captura e atualização da cota;
 - **Detalhes da refeição**: Total de calorias e quebra de macros por alimento e da refeição;
 - **Metas editáveis**: Override manual do plano derivado (calorias, proteínas, carboidratos e gorduras);
 - **Perfil editável**: Nome, data de nascimento, altura, peso e gênero;
@@ -112,10 +113,12 @@ Tela (src/ui)
 
 1. Usuário toca no FAB da home e escolhe **foto** ou **áudio** (máx. 30s);
 2. `PhotoModal` (câmera) ou `AudioModal` (gravação + playback) captura o arquivo;
-3. `useCreateMeal` envia para `MealsService.create`, que chama `POST /create-meal` (com o `timeZone` IANA do dispositivo, via `expo-localization`) e faz o upload direto no S3 via **Presigned POST** (assinatura em base64);
-4. O backend cria a refeição e dispara o processamento: o status avança por `UPLOADING → QUEUED → PROCESSING`;
-5. Enquanto o status é de processamento, `useGetMealById` refaz a consulta a cada **3 segundos** até `SUCCESS` ou `FAILED`;
-6. Em `SUCCESS`, a tela de detalhes mostra o nome/ícone da refeição (definidos pela API a partir do horário) e os alimentos, calorias e macros.
+3. `useCreateMeal` (via `getFileInfo`) normaliza imagens para JPEG e envia para `MealsService.create`, que chama `POST /create-meal` (com o `timeZone` IANA do dispositivo, via `expo-localization`) e faz o upload direto no S3 via **Presigned POST** (assinatura em base64);
+4. O backend valida o arquivo e dispara o processamento: o status avança por `UPLOADING → QUEUED → PROCESSING`;
+5. Enquanto o status é de processamento, `useGetMealById` refaz a consulta a cada **3 segundos** até um status terminal: `SUCCESS`, `REJECTED` ou `FAILED`;
+6. Em `SUCCESS`, a tela de detalhes mostra o nome/ícone da refeição (definidos pela API a partir do horário) e os alimentos, calorias e macros;
+7. Em `REJECTED`, o modal mostra um toast amigável com o motivo, limpa a captura, remove a query da refeição e invalida `['accounts']` para atualizar a cota;
+8. Em `FAILED`, o modal mostra um erro de processamento e permite tentar novamente.
 
 ### Planos e pagamento (billing)
 
@@ -244,7 +247,8 @@ Não há suíte de testes nem script de typecheck no projeto: `yarn lint` e `npx
 src/
 ├── app/                        # Lógica (alias @/app/*)
 │   ├── config/
-│   │   └── env.ts              # validação zod das EXPO_PUBLIC_*
+│   │   ├── env.ts              # validação zod das EXPO_PUBLIC_*
+│   │   └── mealImage.ts        # limite de dimensão e qualidade JPEG
 │   ├── contexts/
 │   │   └── AuthContext/        # isSignedIn, shouldShowOnboarding, refresh
 │   ├── errors/
@@ -259,7 +263,8 @@ src/
 │   │   ├── queryClient.ts      # retry: false
 │   │   ├── sonner.ts           # platform-split de toast (web/native)
 │   │   ├── getCheckoutReturnUrl.ts  # returnUrl do checkout Asaas
-│   │   └── getFileInfo.ts
+│   │   ├── getFileInfo.ts      # normalização de imagem e MIME
+│   │   └── getMealRejectionMessage.ts  # copy de REJECTED
 │   ├── navigation/             # RootStack, AuthStack, AppStack, OnboardingStack
 │   ├── services/               # Service (axios + interceptor 401)
 │   │                           # AuthService, AccountsService,
@@ -300,6 +305,7 @@ src/
 ### Convenções de dados
 
 - Meal queries usam `staleTime: Infinity`; o refresh é manual (pull-to-refresh), exceto o polling de status em `useGetMealById`;
+- O polling só roda em `UPLOADING`, `QUEUED` e `PROCESSING`; `SUCCESS`, `REJECTED` e `FAILED` são terminais;
 - `queryClient` roda com `retry: false`;
 - Toasts sempre importados de `@/app/libs/sonner` (split de plataforma).
 
@@ -313,7 +319,7 @@ src/
 - [TanStack Query 5](https://tanstack.com/query): cache e mutações;
 - [react-hook-form](https://react-hook-form.com/) + [Zod](https://zod.dev/): formulários e validação;
 - [Axios](https://axios-http.com/): client HTTP com interceptor de refresh;
-- Expo modules: `camera`, `audio`, `video`, `auth-session`, `crypto`, `file-system`, `font`, `localization`, `splash-screen`, `web-browser`, `linear-gradient`;
+- Expo modules: `camera`, `audio`, `video`, `auth-session`, `crypto`, `file-system`, `font`, `image-manipulator`, `localization`, `splash-screen`, `web-browser`, `linear-gradient`;
 - `react-native-reanimated` 4 + `react-native-worklets`: animações;
 - `react-native-gesture-handler`, `react-native-safe-area-context`, `react-native-screens`, `react-native-svg`, `react-native-keyboard-controller`;
 - `@gorhom/bottom-sheet`;
@@ -381,9 +387,15 @@ yarn serve:web    # serve dist/ localmente (npx serve dist)
 - O fluxo é Authorization Code + PKCE (`useSocialAuth.ts`); veja também o fluxo OAuth na documentação da API.
 
 ### Refeição fica em `PROCESSING` (ou nunca atualiza)
-- O status só é consultado na tela de detalhes (`useGetMealById`, polling de 3s); abra a refeição para acompanhar;
+- O status é acompanhado pelo `useGetMealById` no modal de criação e na tela de detalhes (polling de 3s);
 - Na home, o refresh é manual: use o pull-to-refresh (`staleTime: Infinity`);
-- Se ficar em `FAILED`, veja os logs da Lambda `processMeal` na API (Dead Letter Queue e alarme por email).
+- O polling termina em `SUCCESS`, `REJECTED` ou `FAILED`; se ficar em `FAILED`, veja os logs da Lambda `processMeal` na API.
+
+### Refeição rejeitada (`REJECTED`)
+- É uma rejeição esperada: o arquivo é inválido, a foto não tem comida/bebida ou o áudio não tem fala/alimentos;
+- O modal mostra uma mensagem amigável e limpa a captura; a cota é atualizada via invalidação de `['accounts']`;
+- Motivos retornados pela API: `INVALID_FILE`, `NOT_A_MEAL` e `NO_FOOD_DETECTED`;
+- `REJECTED` não abre a tela de detalhes e não deve ser tratado como erro de infraestrutura.
 
 ### Toasts não aparecem
 - Importe sempre de `@/app/libs/sonner`: o módulo faz split de plataforma (`sonner` na web, `sonner-native` no nativo);
