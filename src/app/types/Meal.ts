@@ -12,8 +12,9 @@ export type Meal = {
 export type MealItem = {
   id: string;
   status: MealStatus;
+  rejectionReason: RejectionReason | null;
   inputFileType: MealInput;
-  inputFileUrl: string
+  inputFileUrl: string | null;
   name: string;
   icon: string;
   foods: Food[];
@@ -25,10 +26,19 @@ export const MealStatus = {
   QUEUED: 'QUEUED',
   PROCESSING: 'PROCESSING',
   SUCCESS: 'SUCCESS',
+  REJECTED: 'REJECTED',
   FAILED: 'FAILED',
 } as const;
 
 export type MealStatus = ValueOf<typeof MealStatus>;
+
+export const RejectionReason = {
+  NOT_A_MEAL: 'NOT_A_MEAL',
+  NO_FOOD_DETECTED: 'NO_FOOD_DETECTED',
+  INVALID_FILE: 'INVALID_FILE',
+} as const;
+
+export type RejectionReason = ValueOf<typeof RejectionReason>;
 
 export const MealInput = {
   PICTURE: 'PICTURE',

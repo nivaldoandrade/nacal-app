@@ -1,11 +1,14 @@
+import { ErrorCode, getApiErrorCode, getErrorMessage } from '@/app/errors/apiErrors';
 import { useCreateMeal } from '@/app/hooks/mutations/useCreateMeal';
 import { useGetMealById } from '@/app/hooks/queries/useGetMealById';
-import { getApiErrorCode, getErrorMessage } from '@/app/errors/apiErrors';
+import { getMealRejectionMessage } from '@/app/libs/getMealRejectionMessage';
 import { toast } from '@/app/libs/sonner';
 import { AppStackNavigatorProps } from '@/app/navigation/AppStack';
+import { MealStatus } from '@/app/types/Meal';
 import type { CreateMealModalAnimationType } from '@/ui/components/CreateMealModals';
-import type { ICameraCaptureRef } from '@/ui/components/PhotoModal/components/CameraCapture/CameraCapture.types';
+import { MODAL_TOASTER_ID } from '@/ui/components/ModalWrapper';
 import { PhotoActionType } from '@/ui/components/PhotoModal';
+import type { ICameraCaptureRef } from '@/ui/components/PhotoModal/components/CameraCapture/CameraCapture.types';
 import { useNavigation } from '@react-navigation/native';
 import { useQueryClient } from '@tanstack/react-query';
 import { useCameraPermissions } from 'expo-camera';
@@ -24,11 +27,17 @@ export function usePhotoModal({ onRequestClose }: IUsePhotoModalParams) {
   const [permission, requestPermission] = useCameraPermissions();
   const cameraRef = useRef<ICameraCaptureRef>(null);
   const isCapturingRef = useRef(false);
+  const rejectedMealIdRef = useRef<string | null>(null);
 
   const queryClient = useQueryClient();
   const { navigate, addListener } = useNavigation<AppStackNavigatorProps>();
 
-  const { createMeal, mealId, isPending } = useCreateMeal();
+  const {
+    createMeal,
+    mealId,
+    isPending,
+    reset: resetCreateMeal,
+  } = useCreateMeal();
   const { meal, isLoading, isProcessing } = useGetMealById(mealId);
 
   useEffect(() => {
@@ -36,11 +45,30 @@ export function usePhotoModal({ onRequestClose }: IUsePhotoModalParams) {
       return;
     }
 
-    if (meal.status === 'FAILED') {
-      toast.error('Ocorreu um erro ao tentar processar sua refeição. Tente novamente!');
+    if (meal.status === MealStatus.REJECTED) {
+      if (rejectedMealIdRef.current === meal.id) {
+        return;
+      }
+
+      rejectedMealIdRef.current = meal.id;
+      toast.info(getMealRejectionMessage(meal.rejectionReason, meal.inputFileType), {
+        toasterId: MODAL_TOASTER_ID,
+      });
+      queryClient.removeQueries({ queryKey: ['meal', meal.id] });
+      queryClient.invalidateQueries({ queryKey: ['accounts'] });
+      resetCreateMeal();
+      setPhotoActionType('takePhoto');
+      setPhotoUri(null);
+      return;
     }
 
-    if (meal.status === 'SUCCESS') {
+    if (meal.status === MealStatus.FAILED) {
+      toast.error('Ocorreu um erro ao tentar processar sua refeição. Tente novamente!', {
+        toasterId: MODAL_TOASTER_ID,
+      });
+    }
+
+    if (meal.status === MealStatus.SUCCESS) {
       const isoDate = meal.createdAt.toISOString().split('T')[0];
 
       const unsubscribe = addListener('transitionEnd', ({ data }) => {
@@ -57,7 +85,7 @@ export function usePhotoModal({ onRequestClose }: IUsePhotoModalParams) {
       queryClient.invalidateQueries({ queryKey: ['meals', isoDate] });
     }
 
-  }, [addListener, meal, navigate, onRequestClose, queryClient]);
+  }, [addListener, meal, navigate, onRequestClose, queryClient, resetCreateMeal]);
 
   async function handleSend() {
     if (!photoUri) {
@@ -69,14 +97,25 @@ export function usePhotoModal({ onRequestClose }: IUsePhotoModalParams) {
     } catch (error) {
       console.error(error);
 
-      if (getApiErrorCode(error) === 'FREE_QUOTA_EXCEEDED') {
+      const code = getApiErrorCode(error);
+
+      if (code === ErrorCode.FREE_QUOTA_EXCEEDED) {
         onRequestClose('fade');
-        toast.error(getErrorMessage('FREE_QUOTA_EXCEEDED'));
+        toast.error(getErrorMessage(code));
         navigate('Plans');
         return;
       }
 
-      toast.error('Ocorreu um erro ao criar a sua refeição. Tente novamente!');
+      if (code === ErrorCode.RATE_LIMIT_EXCEEDED) {
+        toast.info(getErrorMessage(code), {
+          toasterId: MODAL_TOASTER_ID,
+        });
+        return;
+      }
+
+      toast.error('Ocorreu um erro ao criar a sua refeição. Tente novamente!', {
+        toasterId: MODAL_TOASTER_ID,
+      });
     }
   }
 
@@ -98,7 +137,9 @@ export function usePhotoModal({ onRequestClose }: IUsePhotoModalParams) {
       setPhotoUri(photo.uri);
       setPhotoActionType('reviewing');
     } catch {
-      toast.error('Não conseguimos tirar a foto. Tente novamente.');
+      toast.error('Não conseguimos tirar a foto. Tente novamente.', {
+        toasterId: MODAL_TOASTER_ID,
+      });
     } finally {
       isCapturingRef.current = false;
       setIsCapturing(false);
@@ -109,7 +150,7 @@ export function usePhotoModal({ onRequestClose }: IUsePhotoModalParams) {
     isPending ||
     isLoading ||
     isProcessing ||
-    meal?.status === 'SUCCESS';
+    meal?.status === MealStatus.SUCCESS;
 
   return {
     isCreateMealLoaderVisible,

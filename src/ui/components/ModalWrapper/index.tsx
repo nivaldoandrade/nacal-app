@@ -1,3 +1,4 @@
+import { Toaster } from '@/app/libs/sonner';
 import { ButtonApp } from '@/ui/components/Button';
 import { styles } from '@/ui/components/ModalWrapper/styles';
 import { theme } from '@/ui/styles/theme';
@@ -6,6 +7,8 @@ import { StatusBar } from 'expo-status-bar';
 import { XIcon } from 'lucide-react-native';
 import { Modal, StyleProp, View, ViewStyle } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
+
+export const MODAL_TOASTER_ID = 'modal';
 
 interface IModalWrapperProps {
   children: React.ReactNode
@@ -41,6 +44,11 @@ export function ModalWrapper({
           <View style={[styles.wrapper, { paddingTop: top, paddingBottom: bottom }, style]}>
             {children}
           </View>
+          <Toaster
+            id={MODAL_TOASTER_ID}
+            fullWindowOverlay={false}
+            position='bottom-center'
+          />
         </SafeAreaProvider>
       </View>
     </Modal>

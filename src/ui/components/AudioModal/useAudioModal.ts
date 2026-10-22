@@ -1,14 +1,17 @@
 import { useCreateMeal } from '@/app/hooks/mutations/useCreateMeal';
 import { useGetMealById } from '@/app/hooks/queries/useGetMealById';
-import { getApiErrorCode, getErrorMessage } from '@/app/errors/apiErrors';
+import { ErrorCode, getApiErrorCode, getErrorMessage } from '@/app/errors/apiErrors';
+import { getMealRejectionMessage } from '@/app/libs/getMealRejectionMessage';
 import { AppStackNavigatorProps } from '@/app/navigation/AppStack';
 import { toast } from '@/app/libs/sonner';
+import { MealStatus } from '@/app/types/Meal';
 import { ActionType } from '@/ui/components/AudioModal';
 import { CreateMealModalAnimationType } from '@/ui/components/CreateMealModals';
+import { MODAL_TOASTER_ID } from '@/ui/components/ModalWrapper';
 import { useNavigation } from '@react-navigation/native';
 import { useQueryClient } from '@tanstack/react-query';
 import { AudioModule, RecordingPresets, setAudioModeAsync, useAudioRecorder } from 'expo-audio';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { Platform } from 'react-native';
 
 interface IUseAudioModalParams {
@@ -21,11 +24,17 @@ export function useAudioModal({ visible, onRequestClose }: IUseAudioModalParams)
   const [recordedUri, setRecordedUri] = useState<string | null>(null);
 
   const audioRecorder = useAudioRecorder(RecordingPresets.HIGH_QUALITY);
+  const rejectedMealIdRef = useRef<string | null>(null);
 
   const queryClient = useQueryClient();
   const { navigate, addListener } = useNavigation<AppStackNavigatorProps>();
 
-  const { createMeal, mealId, isPending } = useCreateMeal();
+  const {
+    createMeal,
+    mealId,
+    isPending,
+    reset: resetCreateMeal,
+  } = useCreateMeal();
   const { meal, isLoading, isProcessing } = useGetMealById(mealId);
 
   useEffect(() => {
@@ -37,7 +46,9 @@ export function useAudioModal({ visible, onRequestClose }: IUseAudioModalParams)
 
       const status = await AudioModule.requestRecordingPermissionsAsync();
       if (!status.granted) {
-        toast.error('Permissão para acessar o microfone foi negada');
+        toast.error('Permissão para acessar o microfone foi negada', {
+          toasterId: MODAL_TOASTER_ID,
+        });
       }
 
       setAudioModeAsync({
@@ -52,11 +63,30 @@ export function useAudioModal({ visible, onRequestClose }: IUseAudioModalParams)
       return;
     }
 
-    if (meal.status === 'FAILED') {
-      toast.error('Ocorreu um erro ao tentar processar sua refeição. Tente novamente!');
+    if (meal.status === MealStatus.REJECTED) {
+      if (rejectedMealIdRef.current === meal.id) {
+        return;
+      }
+
+      rejectedMealIdRef.current = meal.id;
+      toast.info(getMealRejectionMessage(meal.rejectionReason, meal.inputFileType), {
+        toasterId: MODAL_TOASTER_ID,
+      });
+      queryClient.removeQueries({ queryKey: ['meal', meal.id] });
+      queryClient.invalidateQueries({ queryKey: ['accounts'] });
+      resetCreateMeal();
+      setRecordedUri(null);
+      setRecordingStatus('startRecord');
+      return;
     }
 
-    if (meal.status === 'SUCCESS') {
+    if (meal.status === MealStatus.FAILED) {
+      toast.error('Ocorreu um erro ao tentar processar sua refeição. Tente novamente!', {
+        toasterId: MODAL_TOASTER_ID,
+      });
+    }
+
+    if (meal.status === MealStatus.SUCCESS) {
       const isoDate = meal.createdAt.toISOString().split('T')[0];
 
       const unsubscribe = addListener('transitionEnd', ({ data }) => {
@@ -73,7 +103,7 @@ export function useAudioModal({ visible, onRequestClose }: IUseAudioModalParams)
       queryClient.invalidateQueries({ queryKey: ['meals', isoDate] });
     }
 
-  }, [addListener, meal, navigate, onRequestClose, queryClient]);
+  }, [addListener, meal, navigate, onRequestClose, queryClient, resetCreateMeal]);
 
   const handleChangeRecordingStatus = useCallback(
     async (actionType: ActionType) => {
@@ -82,7 +112,9 @@ export function useAudioModal({ visible, onRequestClose }: IUseAudioModalParams)
           await audioRecorder.prepareToRecordAsync();
           audioRecorder.record();
         } catch {
-          toast.error('Permissão para acessar o microfone foi negada');
+          toast.error('Permissão para acessar o microfone foi negada', {
+            toasterId: MODAL_TOASTER_ID,
+          });
           return;
         }
       }
@@ -96,6 +128,7 @@ export function useAudioModal({ visible, onRequestClose }: IUseAudioModalParams)
     }, [audioRecorder]);
 
   function handleTryAgain() {
+    setRecordedUri(null);
     setRecordingStatus('startRecord');
   }
 
@@ -109,14 +142,25 @@ export function useAudioModal({ visible, onRequestClose }: IUseAudioModalParams)
     } catch (error) {
       console.error(error);
 
-      if (getApiErrorCode(error) === 'FREE_QUOTA_EXCEEDED') {
+      const code = getApiErrorCode(error);
+
+      if (code === ErrorCode.FREE_QUOTA_EXCEEDED) {
         onRequestClose('fade');
-        toast.error(getErrorMessage('FREE_QUOTA_EXCEEDED'));
+        toast.error(getErrorMessage(code));
         navigate('Plans');
         return;
       }
 
-      toast.error('Ocorreu um erro ao criar a sua refeição. Tente novamente!');
+      if (code === ErrorCode.RATE_LIMIT_EXCEEDED) {
+        toast.info(getErrorMessage(code), {
+          toasterId: MODAL_TOASTER_ID,
+        });
+        return;
+      }
+
+      toast.error('Ocorreu um erro ao criar a sua refeição. Tente novamente!', {
+        toasterId: MODAL_TOASTER_ID,
+      });
     }
   }
 
@@ -126,7 +170,7 @@ export function useAudioModal({ visible, onRequestClose }: IUseAudioModalParams)
     isPending ||
     isLoading ||
     isProcessing ||
-    meal?.status === 'SUCCESS';
+    meal?.status === MealStatus.SUCCESS;
 
   return {
     isCreateMealLoaderVisible,
