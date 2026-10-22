@@ -3,7 +3,8 @@ import {
   MEAL_IMAGE_JPEG_QUALITY,
 } from '@/app/config/mealImage';
 import { File } from 'expo-file-system';
-import { Platform } from 'react-native';
+import { ImageManipulator, SaveFormat } from 'expo-image-manipulator';
+import { Image as RNImage, Platform } from 'react-native';
 
 const SUPPORTED_MIME_TYPE_EXTENSIONS: Record<string, string> = {
   'audio/m4a': 'm4a',
@@ -33,6 +34,7 @@ export async function getFileInfo(fileOrUri: string | globalThis.File) {
       }
 
       return {
+        uri: typeof fileOrUri === 'string' ? fileOrUri : '',
         size: optimizedFile.size,
         mimeType: optimizedFile.type,
         file: optimizedFile,
@@ -40,24 +42,81 @@ export async function getFileInfo(fileOrUri: string | globalThis.File) {
     }
 
     const fileUri = fileOrUri as string;
-    const fileInfo = new File(fileUri).info();
     const filename = fileUri.split('/').at(-1);
 
-    if (!fileInfo.exists || !fileInfo.size || !filename) {
+    if (!filename) {
       throw new Error('File does not exist.');
     }
 
-    const mimeType = filename.endsWith('.jpg') ? 'image/jpeg' : 'audio/m4a';
+    if (isNativeImageFile(filename)) {
+      const optimizedImage = await optimizeNativeImageFile(fileUri);
+      const optimizedFilename = optimizedImage.uri.split('/').at(-1);
+      const optimizedFileInfo = new File(optimizedImage.uri).info();
+
+      if (!optimizedFilename || !optimizedFileInfo.exists || !optimizedFileInfo.size) {
+        throw new Error('File does not exist.');
+      }
+
+      return {
+        uri: optimizedImage.uri,
+        filename: optimizedFilename,
+        size: optimizedFileInfo.size,
+        mimeType: 'image/jpeg',
+      } as const;
+    }
+
+    const fileInfo = new File(fileUri).info();
+
+    if (!fileInfo.exists || !fileInfo.size) {
+      throw new Error('File does not exist.');
+    }
 
     return {
+      uri: fileUri,
       filename: filename,
       size: fileInfo.size,
-      mimeType,
+      mimeType: 'audio/m4a',
     } as const;
   } catch (error) {
     console.log('Error file info:', error);
     throw error;
   }
+}
+
+function isNativeImageFile(filename: string): boolean {
+  return /\.(jpe?g|png|webp|heic|heif)$/i.test(filename);
+}
+
+async function optimizeNativeImageFile(uri: string) {
+  const { width, height } = await new Promise<{ width: number; height: number }>(
+    (resolve, reject) => {
+      RNImage.getSize(
+        uri,
+        (naturalWidth, naturalHeight) => resolve({
+          width: naturalWidth,
+          height: naturalHeight,
+        }),
+        reject,
+      );
+    },
+  );
+
+  const scaledSize = getScaledImageSize(width, height);
+  const context = ImageManipulator.manipulate(uri);
+
+  if (scaledSize.width !== width || scaledSize.height !== height) {
+    context.resize({
+      width: scaledSize.width,
+      height: scaledSize.height,
+    });
+  }
+
+  const image = await context.renderAsync();
+
+  return image.saveAsync({
+    compress: MEAL_IMAGE_JPEG_QUALITY,
+    format: SaveFormat.JPEG,
+  });
 }
 
 function getBaseMimeType(mimeType: string): string {

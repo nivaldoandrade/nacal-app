@@ -24,12 +24,12 @@ function getDeviceTimeZone(): string | undefined {
 export function useCreateMeal() {
   const queryClient = useQueryClient();
 
-  const { data, mutateAsync, isPending } = useMutation({
+  const { data, mutateAsync, isPending, reset } = useMutation({
     mutationFn: async (fileOrUri: string) => {
-      const { filename, mimeType, size, file } = await getFileInfo(fileOrUri);
+      const { filename, mimeType, size, file, uri } = await getFileInfo(fileOrUri);
 
       return await MealsService.create({
-        uri: fileOrUri,
+        uri,
         contentType: mimeType,
         fileSize: size,
         filename,
@@ -46,5 +46,6 @@ export function useCreateMeal() {
     createMeal: mutateAsync,
     mealId: data?.mealId,
     isPending,
+    reset,
   };
 }
