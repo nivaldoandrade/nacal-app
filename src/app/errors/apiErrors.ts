@@ -45,7 +45,6 @@ export const ApiErrorMessages: Record<ErrorCode, string> = {
 } as const;
 
 export function getErrorMessage(code?: ErrorCode): string {
-  console.log(code);
   return (code && ApiErrorMessages[code]) || 'Ocorreu um erro. Tente novamente.';
 }
 
