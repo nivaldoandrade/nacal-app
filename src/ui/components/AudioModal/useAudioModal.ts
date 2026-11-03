@@ -25,6 +25,7 @@ export function useAudioModal({ visible, onRequestClose }: IUseAudioModalParams)
 
   const audioRecorder = useAudioRecorder(RecordingPresets.HIGH_QUALITY);
   const rejectedMealIdRef = useRef<string | null>(null);
+  const failedMealIdRef = useRef<string | null>(null);
 
   const queryClient = useQueryClient();
   const { navigate, addListener } = useNavigation<AppStackNavigatorProps>();
@@ -81,9 +82,20 @@ export function useAudioModal({ visible, onRequestClose }: IUseAudioModalParams)
     }
 
     if (meal.status === MealStatus.FAILED) {
+      if (failedMealIdRef.current === meal.id) {
+        return;
+      }
+
+      failedMealIdRef.current = meal.id;
       toast.error('Ocorreu um erro ao tentar processar sua refeição. Tente novamente!', {
         toasterId: MODAL_TOASTER_ID,
       });
+      queryClient.removeQueries({ queryKey: ['meal', meal.id] });
+      queryClient.invalidateQueries({ queryKey: ['accounts'] });
+      resetCreateMeal();
+      setRecordedUri(null);
+      setRecordingStatus('startRecord');
+      return;
     }
 
     if (meal.status === MealStatus.SUCCESS) {

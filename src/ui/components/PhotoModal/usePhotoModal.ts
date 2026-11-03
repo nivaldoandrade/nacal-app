@@ -28,6 +28,7 @@ export function usePhotoModal({ onRequestClose }: IUsePhotoModalParams) {
   const cameraRef = useRef<ICameraCaptureRef>(null);
   const isCapturingRef = useRef(false);
   const rejectedMealIdRef = useRef<string | null>(null);
+  const failedMealIdRef = useRef<string | null>(null);
 
   const queryClient = useQueryClient();
   const { navigate, addListener } = useNavigation<AppStackNavigatorProps>();
@@ -63,9 +64,20 @@ export function usePhotoModal({ onRequestClose }: IUsePhotoModalParams) {
     }
 
     if (meal.status === MealStatus.FAILED) {
+      if (failedMealIdRef.current === meal.id) {
+        return;
+      }
+
+      failedMealIdRef.current = meal.id;
       toast.error('Ocorreu um erro ao tentar processar sua refeição. Tente novamente!', {
         toasterId: MODAL_TOASTER_ID,
       });
+      queryClient.removeQueries({ queryKey: ['meal', meal.id] });
+      queryClient.invalidateQueries({ queryKey: ['accounts'] });
+      resetCreateMeal();
+      setPhotoActionType('takePhoto');
+      setPhotoUri(null);
+      return;
     }
 
     if (meal.status === MealStatus.SUCCESS) {
