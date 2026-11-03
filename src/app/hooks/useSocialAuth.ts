@@ -41,6 +41,17 @@ export function useSocialAuth({ onSuccess }: IUseSocialAuthParams) {
     try {
       const result = await promptAsync();
 
+      if (result.type === 'error') {
+        // Cognito redirects back with the PreSignUp trigger error in error_description,
+        // e.g. "PreSignUp failed with error BETA_ACCESS_DENIED."
+        const description = `${result.params.error_description ?? ''} ${result.error?.message ?? ''}`;
+
+        toast.error(getErrorMessage(
+          description.includes(ErrorCode.BETA_ACCESS_DENIED) ? ErrorCode.BETA_ACCESS_DENIED : undefined,
+        ));
+        return;
+      }
+
       if (result.type !== 'success') {
         return;
       }
