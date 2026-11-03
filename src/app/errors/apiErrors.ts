@@ -4,6 +4,10 @@ import { isAxiosError } from 'axios';
 export const ErrorCode = {
   VALIDATION: 'VALIDATION',
   EMAIL_ALREADY_IN_USE: 'EMAIL_ALREADY_IN_USE',
+  EMAIL_NOT_CONFIRMED: 'EMAIL_NOT_CONFIRMED',
+  INVALID_CONFIRMATION_CODE: 'INVALID_CONFIRMATION_CODE',
+  TOO_MANY_ATTEMPTS: 'TOO_MANY_ATTEMPTS',
+  CODE_DELIVERY_FAILED: 'CODE_DELIVERY_FAILED',
   INVALID_REFRESH_TOKEN: 'INVALID_REFRESH_TOKEN',
   INVALID_CREDENTIALS: 'INVALID_CREDENTIALS',
   INVALID_GRANT: 'INVALID_GRANT',
@@ -32,6 +36,10 @@ export type ApiError = {
 export const ApiErrorMessages: Record<ErrorCode, string> = {
   VALIDATION: 'Verifique os campos e tente novamente.',
   EMAIL_ALREADY_IN_USE: 'Este e-mail já está em uso.',
+  EMAIL_NOT_CONFIRMED: 'Confirme seu e-mail para entrar. Se precisar, reenvie o código.',
+  INVALID_CONFIRMATION_CODE: 'Código inválido ou expirado. Tente novamente.',
+  TOO_MANY_ATTEMPTS: 'Muitas tentativas seguidas. Aguarde alguns minutos e tente de novo.',
+  CODE_DELIVERY_FAILED: 'Não conseguimos enviar o código agora. Tente de novo em instantes.',
   INVALID_REFRESH_TOKEN: 'Sua sessão expirou. Faça login novamente.',
   INVALID_CREDENTIALS: 'E-mail ou senha incorretos.',
   INVALID_GRANT: 'Falha na autenticação. Tente novamente.',

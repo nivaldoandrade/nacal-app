@@ -1,5 +1,5 @@
 import { useAuth } from '@/app/contexts/AuthContext/useAuth';
-import { ApiError, getErrorMessage } from '@/app/errors/apiErrors';
+import { ApiError, ErrorCode, getErrorMessage } from '@/app/errors/apiErrors';
 import { AuthStackNavigatorProps } from '@/app/navigation/AuthStack';
 import { ISignInBottomSheet } from '@/ui/components/SignInBottomSheet/ISignInBottomSheet';
 import { signInSchema } from '@/ui/components/SignInBottomSheet/schema';
@@ -61,6 +61,13 @@ export function useSignInBottomSheet({ ref, initialEmail }: IUseSignInBottomShee
     } catch (error) {
       if (isAxiosError<ApiError>(error)) {
         const code = error.response?.data.error.code;
+
+        if (code === ErrorCode.EMAIL_NOT_CONFIRMED) {
+          bottomSheetModalRef.current?.dismiss();
+          navigation.navigate('ConfirmEmail', { email: data.email, codeSent: false });
+          return;
+        }
+
         const message = getErrorMessage(code);
         setError('root.api', { message });
       }

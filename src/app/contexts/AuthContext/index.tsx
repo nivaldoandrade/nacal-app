@@ -13,12 +13,29 @@ interface IAuthContext {
   shouldShowOnboarding: boolean;
   isSignedIn: boolean;
   isSignedUp: boolean;
+  hasPendingSignUp: boolean;
+  /** Email whose password is cached for the confirmation step, if any. */
+  pendingSignUpEmail: string | null;
   signIn: (params: AuthService.SignIn['params']) => Promise<void>;
-  signUp: (params: AuthService.SignUp['params']) => Promise<void>;
+  signUp: (params: AuthService.SignUp['params']) => Promise<AuthService.SignUp['response']>;
+  confirmPendingSignUp: (params: IConfirmPendingSignUpParams) => Promise<IConfirmPendingSignUpResult>;
   signOut: () => Promise<void>;
   signInWithSocial: (response: AuthService.SignInWithSocial['response']) => Promise<boolean>;
   completeOnboarding: (profile: Omit<AccountsService.CompleteOnboardingParams, 'accessToken'>) => Promise<void>;
   completeSocialOnboarding: (response: AuthService.SignInWithSocial['response'], profile: Omit<AccountsService.CompleteOnboardingParams, 'accessToken'>) => Promise<void>;
+}
+
+interface IConfirmPendingSignUpParams {
+  email: string;
+  confirmationCode: string;
+  /** Required when no password is cached for this email (e.g. after reopening the app). */
+  password?: string;
+}
+
+interface IConfirmPendingSignUpResult {
+  signedIn: boolean;
+  isOnboarded: boolean;
+  passwordResetRequired: boolean;
 }
 
 export const AuthContext = createContext({} as IAuthContext);
@@ -31,7 +48,12 @@ export function AuthProvider({ children }: IAuthProvider) {
   const [shouldShowOnboarding, setShouldShowOnboarding] = useState(false);
   const [isSignedUp, setIsSignedUp] = useState(false);
   const [isSignedIn, setIsSignedIn] = useState(false);
+  const [firstRunAfterConfirmationEmail, setFirstRunAfterConfirmationEmail] = useState<string | null>(null);
   const [appIsReady, setAppIsReady] = useState(false);
+  const [pendingSignUp, setPendingSignUp] = useState<{
+    email: string;
+    password: string;
+  } | null>(null);
 
   const { loadAccount } = useAccount({ enabled: false });
 
@@ -42,7 +64,9 @@ export function AuthProvider({ children }: IAuthProvider) {
     queryClient.clear();
     setIsSignedIn(false);
     setIsSignedUp(false);
+    setFirstRunAfterConfirmationEmail(null);
     setShouldShowOnboarding(false);
+    setPendingSignUp(null);
   }, []);
 
   const setupAuth = useCallback(async (accessToken: string): Promise<boolean> => {
@@ -81,6 +105,7 @@ export function AuthProvider({ children }: IAuthProvider) {
     async (response: AuthService.SignInWithSocial['response']): Promise<boolean> => {
       const { accessToken, refreshToken } = response;
       await AuthTokenManager.save({ accessToken, refreshToken });
+      setPendingSignUp(null);
 
       return setupAuth(response.accessToken);
     }, [setupAuth]);
@@ -127,19 +152,96 @@ export function AuthProvider({ children }: IAuthProvider) {
     }, [completeOnboarding]);
 
   const signIn = useCallback(async (payload: AuthService.SignIn['params']) => {
-    const response = await AuthService.signIn(payload);
+    let response: AuthService.SignIn['response'];
+
+    try {
+      response = await AuthService.signIn(payload);
+    } catch (error) {
+      if (getApiErrorCode(error) === ErrorCode.EMAIL_NOT_CONFIRMED) {
+        // The confirmation step needs the password to prove who chose it. If this one
+        // is wrong, the API replaces it on confirmation and the user resets it by email.
+        setPendingSignUp({
+          email: payload.email.trim().toLowerCase(),
+          password: payload.password,
+        });
+      }
+
+      throw error;
+    }
 
     await AuthTokenManager.save(response);
+    setPendingSignUp(null);
     await setupAuth(response.accessToken);
-  }, [setupAuth]);
 
-  const signUp = useCallback(async (payload: AuthService.SignUp['params']): Promise<void> => {
+    const normalizedEmail = payload.email.trim().toLowerCase();
+
+    if (firstRunAfterConfirmationEmail === normalizedEmail) {
+      setIsSignedUp(true);
+      setFirstRunAfterConfirmationEmail(null);
+    }
+  }, [firstRunAfterConfirmationEmail, setupAuth]);
+
+  const signUp = useCallback(async (payload: AuthService.SignUp['params']) => {
     const response = await AuthService.signUp(payload);
 
-    await AuthTokenManager.save(response);
-    await setupAuth(response.accessToken);
-    setIsSignedUp(true);
-  }, [setupAuth]);
+    setPendingSignUp({
+      email: payload.account.email.trim().toLowerCase(),
+      password: payload.account.password,
+    });
+
+    return response;
+  }, []);
+
+  const confirmPendingSignUp = useCallback(async (
+    { email, confirmationCode, password: typedPassword }: IConfirmPendingSignUpParams,
+  ): Promise<IConfirmPendingSignUpResult> => {
+    const normalizedEmail = email.trim().toLowerCase();
+    const cachedPassword = pendingSignUp?.email === normalizedEmail ? pendingSignUp.password : undefined;
+    const password = cachedPassword ?? typedPassword;
+
+    if (!password) {
+      throw new Error('Password is required to confirm the sign-up.');
+    }
+
+    const { passwordResetRequired } = await AuthService.confirmSignUp({
+      email: normalizedEmail,
+      confirmationCode,
+      password,
+    });
+
+    if (passwordResetRequired) {
+      setPendingSignUp(null);
+      setFirstRunAfterConfirmationEmail(normalizedEmail);
+      return { signedIn: false, isOnboarded: false, passwordResetRequired: true };
+    }
+
+    try {
+      const tokens = await AuthService.signIn({
+        email: normalizedEmail,
+        password,
+      });
+
+      await AuthTokenManager.save(tokens);
+      const isOnboarded = await setupAuth(tokens.accessToken);
+
+      setPendingSignUp(null);
+      setFirstRunAfterConfirmationEmail(null);
+
+      if (isOnboarded) {
+        setIsSignedUp(true);
+      }
+
+      return { signedIn: true, isOnboarded, passwordResetRequired: false };
+    } catch (error) {
+      if (getApiErrorCode(error) === ErrorCode.INVALID_CREDENTIALS) {
+        setPendingSignUp(null);
+        setFirstRunAfterConfirmationEmail(normalizedEmail);
+        return { signedIn: false, isOnboarded: false, passwordResetRequired: false };
+      }
+
+      throw error;
+    }
+  }, [pendingSignUp, setupAuth]);
 
   useEffect(() => {
     async function getTokens() {
@@ -180,8 +282,11 @@ export function AuthProvider({ children }: IAuthProvider) {
       shouldShowOnboarding,
       isSignedIn,
       isSignedUp,
+      hasPendingSignUp: pendingSignUp !== null,
+      pendingSignUpEmail: pendingSignUp?.email ?? null,
       signIn,
       signUp,
+      confirmPendingSignUp,
       signOut,
       signInWithSocial,
       completeOnboarding,

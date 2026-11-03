@@ -31,6 +31,20 @@ export class AuthService extends Service {
     return data;
   }
 
+  static async confirmSignUp(
+    params: AuthService.ConfirmSignUp['params'],
+  ): Promise<AuthService.ConfirmSignUp['response']> {
+    const { data } = await this.client.post<AuthService.ConfirmSignUp['response']>('auth/confirm-sign-up', params);
+
+    return data;
+  }
+
+  static async resendConfirmationCode(
+    params: AuthService.ResendConfirmationCode['params'],
+  ): Promise<void> {
+    await this.client.post('auth/resend-confirmation-code', params);
+  }
+
   static async refreshToken(
     params: AuthService.RefreshToken['params'],
   ): Promise<AuthService.RefreshToken['response']> {
@@ -90,8 +104,25 @@ export namespace AuthService {
   export type SignUp = {
     params: OnboardingSchemaOutput,
     response: {
-      accessToken: string;
-      refreshToken: string;
+      requiresConfirmation: boolean;
+      alreadyPending: boolean;
+    }
+  }
+
+  export type ConfirmSignUp = {
+    params: {
+      email: string;
+      confirmationCode: string;
+      password: string;
+    },
+    response: {
+      passwordResetRequired: boolean;
+    }
+  }
+
+  export type ResendConfirmationCode = {
+    params: {
+      email: string;
     }
   }
 

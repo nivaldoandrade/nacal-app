@@ -13,7 +13,7 @@ import { FormProvider, useForm } from 'react-hook-form';
 import { View } from 'react-native';
 
 export function Onboarding() {
-  const { signOut } = useAuth();
+  const { signOut, hasPendingSignUp, isSignedIn } = useAuth();
   const form = useForm({
     defaultValues: {
       acceptedTerms: false,
@@ -39,11 +39,11 @@ export function Onboarding() {
           .getQueryData<AccountsService.Me>(['accounts'])
           ?.isOnboarded;
 
-        if (isOnboarded === false) {
+        if (isSignedIn && isOnboarded === false && !hasPendingSignUp) {
           signOut();
         }
       };
-    }, [signOut]),
+    }, [hasPendingSignUp, isSignedIn, signOut]),
   );
 
   return (

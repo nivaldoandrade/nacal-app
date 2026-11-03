@@ -1,5 +1,6 @@
 
 import { OnboardingParamList } from '@/app/navigation/OnboardingStack';
+import { ConfirmEmail } from '@/ui/screens/confirmEmail';
 import { ForgotPassword } from '@/ui/screens/forgotPassword';
 import { ResetPassword } from '@/ui/screens/forgotPassword/resetPassword';
 import { Onboarding } from '@/ui/screens/onboarding';
@@ -14,6 +15,7 @@ export type AuthStackParamList = {
   Onboarding: NavigatorScreenParams<OnboardingParamList> | undefined;
   ForgotPassword: undefined;
   ResetPassword: { email: string };
+  ConfirmEmail: { email: string; codeSent?: boolean };
 }
 
 const Stack = createNativeStackNavigator<AuthStackParamList>();
@@ -36,6 +38,7 @@ export function AuthStack() {
       <Stack.Screen name="Onboarding" component={Onboarding} />
       <Stack.Screen name="ForgotPassword" component={ForgotPassword} />
       <Stack.Screen name="ResetPassword" component={ResetPassword} />
+      <Stack.Screen name="ConfirmEmail" component={ConfirmEmail} />
     </Stack.Navigator>
   );
 }

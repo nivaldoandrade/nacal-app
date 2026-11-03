@@ -8,7 +8,7 @@ import { useEffect } from 'react';
 export function useOnboardingIntro() {
   const navigation = useNavigation<AuthStackNavigatorProps>();
 
-  const { isSignedIn, signOut } = useAuth();
+  const { hasPendingSignUp, isSignedIn, signOut } = useAuth();
 
   useEffect(() => {
     if (!isSignedIn) {
@@ -22,13 +22,13 @@ export function useOnboardingIntro() {
         .getQueryData<AccountsService.Me>(['accounts'])
         ?.isOnboarded;
 
-      if (isSignedIn && isOnboarded !== true) {
+      if (isSignedIn && isOnboarded !== true && !hasPendingSignUp) {
         signOut();
       }
     });
 
     return unsubscribe;
-  }, [navigation, isSignedIn, signOut]);
+  }, [hasPendingSignUp, navigation, isSignedIn, signOut]);
 
   function handleStartPress() {
     navigation.navigate('Onboarding');

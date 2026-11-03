@@ -1,6 +1,8 @@
 
 import { useAuth } from '@/app/contexts/AuthContext/useAuth';
-import { getApiErrorCode, getErrorMessage } from '@/app/errors/apiErrors';
+import { ErrorCode, getApiErrorCode, getErrorMessage } from '@/app/errors/apiErrors';
+import type { AuthStackNavigatorProps } from '@/app/navigation/AuthStack';
+import type { OnboardingStackNavigationProps } from '@/app/navigation/OnboardingStack';
 import { ButtonApp } from '@/ui/components/Button';
 import { FormGroup } from '@/ui/components/FormGroup';
 import { GoogleIcon } from '@/ui/components/GoogleIcon';
@@ -16,11 +18,13 @@ import { Controller, useFormContext } from 'react-hook-form';
 import { StyleSheet, TextInput, View } from 'react-native';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-controller';
 import { useSafeAreaInsets } from '@/ui/hooks/useSafeAreaInsets';
+import { useNavigation } from '@react-navigation/native';
 
 export function CreateAccountStep() {
   const [footerHeight, setFooterHeight] = useState(0);
   const { bottom } = useSafeAreaInsets();
   const { signUp } = useAuth();
+  const navigation = useNavigation<OnboardingStackNavigationProps>();
   const { signInWithGoogle, isGoogleLoading } = useOnboardingSubmit({ flow: 'signUp' });
 
   const {
@@ -36,15 +40,19 @@ export function CreateAccountStep() {
 
   const handleSubmit = RHFHandleSubmit(async (data) => {
     try {
-
       await signUp(data);
+
+      navigation.getParent<AuthStackNavigatorProps>()?.navigate('ConfirmEmail', {
+        email: data.account.email,
+        codeSent: true,
+      });
     } catch (error) {
       const code = getApiErrorCode(error);
       const message = getErrorMessage(code);
 
-      if (code === 'EMAIL_ALREADY_IN_USE') {
+      if (code === ErrorCode.EMAIL_ALREADY_IN_USE) {
         setError('account.email', { type: 'api', message });
-      } else if (code) {
+      } else {
         setError('root.api', { message });
       }
     }
