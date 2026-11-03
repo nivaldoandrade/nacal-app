@@ -53,6 +53,21 @@ export const styles = StyleSheet.create({
     paddingVertical: 4,
   },
 
+  installRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+
+  installIcon: {
+    width: 48,
+    height: 48,
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: theme.colors.gray[200],
+  },
+
   planBadgeFree: {
     backgroundColor: theme.colors.gray[200],
     borderRadius: 20,

@@ -24,6 +24,7 @@ Expo SDK 57 / React Native 0.86 / React 19 / TypeScript strict. Expo APIs change
 - **Lint rules that differ from defaults** (`eslint.config.js`): interfaces must be `I`-prefixed (`IFoo`), single quotes, semicolons, always-multiline trailing commas, `curly: all`, `eqeqeq`, `no-console: warn`.
 - Meal queries use `staleTime: Infinity` (manual refresh/pull-to-refresh is the model); `queryClient` has `retry: false`.
 - Meal processing is async (`UPLOADING → QUEUED → PROCESSING → SUCCESS/FAILED`) — poll status, don't block on upload.
+- **PWA install tip**: `beforeinstallprompt` is captured by an inline script in `public/index.html` (`window.__nacalInstallPrompt`) and read by `src/app/libs/pwaInstall.web.ts` (native stub reports standalone → never shows). `InstallAppSheet` auto-opens on Home after the plan modals; "Agora não" snoozes it 7 days (`InstallTipStorage`); Profile has a manual entry.
 - `/ios` and `/android` are gitignored generated folders (`expo run:*` regenerates them); `.env` is gitignored.
 
 ## Product & design sources of truth

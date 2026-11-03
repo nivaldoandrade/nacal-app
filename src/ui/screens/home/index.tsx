@@ -1,5 +1,7 @@
 import { Meal } from '@/app/types/Meal';
 import { CreateMealModals } from '@/ui/components/CreateMealModals';
+import { InstallAppSheet } from '@/ui/components/InstallAppSheet';
+import { IInstallAppSheet } from '@/ui/components/InstallAppSheet/IInstallAppSheet';
 import { Fab } from '@/ui/screens/home/components/Fab';
 import { Header } from '@/ui/screens/home/components/Header';
 import { ItemSeparatorComponent } from '@/ui/screens/home/components/ItemSeparatorComponent';
@@ -17,7 +19,7 @@ import { isSameDate } from '@/ui/utils/isSameDate';
 import { useFocusEffect } from '@react-navigation/native';
 import { StatusBar } from 'expo-status-bar';
 import * as SystemUI from 'expo-system-ui';
-import { useCallback } from 'react';
+import { useCallback, useEffect, useRef } from 'react';
 import { FlatList, ListRenderItemInfo, Platform, RefreshControl, View } from 'react-native';
 
 export function Home() {
@@ -40,7 +42,23 @@ export function Home() {
     finalizeCreateMealModalClose,
     handleSelectDate,
   } = useHome();
-  const { showSummary, showOffer, dismissSummary, dismissOffer } = useFirstRunModals();
+  const { showSummary, showOffer, showInstallTip, dismissSummary, dismissOffer } = useFirstRunModals();
+  const installSheetRef = useRef<IInstallAppSheet>(null);
+  const installTipPresentedRef = useRef(false);
+
+  useEffect(() => {
+    if (!showInstallTip || showSplash || !!activeCreateMealModal || installTipPresentedRef.current) {
+      return;
+    }
+
+    // Pequena pausa para não competir com o fade do splash.
+    const timeout = setTimeout(() => {
+      installTipPresentedRef.current = true;
+      installSheetRef.current?.open();
+    }, 800);
+
+    return () => clearTimeout(timeout);
+  }, [showInstallTip, showSplash, activeCreateMealModal]);
 
   useFocusEffect(
     useCallback(() => {
@@ -108,6 +126,8 @@ export function Home() {
           onDismiss={finalizeCreateMealModalClose}
         />
       )}
+
+      <InstallAppSheet ref={installSheetRef} source='auto' />
 
       <SplashScreenLoader visible={showSplash} />
     </View>

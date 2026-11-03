@@ -41,6 +41,23 @@
         touch-action: pan-x pan-y;
       }
     </style>
+    <script id="pwa-install-prompt">
+      // Captura o prompt nativo de instalação (Chrome/Edge/Android) antes do
+      // React montar — o evento pode disparar cedo e não se repete. Lido por
+      // src/app/libs/pwaInstall.web.ts.
+      (function () {
+        window.addEventListener('beforeinstallprompt', function (event) {
+          event.preventDefault();
+          window.__nacalInstallPrompt = event;
+          window.dispatchEvent(new Event('nacal:installprompt'));
+        });
+
+        window.addEventListener('appinstalled', function () {
+          window.__nacalInstallPrompt = null;
+          window.dispatchEvent(new Event('nacal:installed'));
+        });
+      })();
+    </script>
     <script id="pwa-zoom-lock">
       (function () {
         var isStandalone =

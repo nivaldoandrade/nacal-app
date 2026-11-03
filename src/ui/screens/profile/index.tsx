@@ -4,6 +4,7 @@ import { GenderInput } from '@/ui/components/Inputs/GenderInput';
 import { MeasurementField } from '@/ui/components/Inputs/MeasurementField';
 import { NameInput } from '@/ui/components/Inputs/NameInput';
 import { BirthDateField } from '@/ui/screens/profile/components/BirthDateField';
+import { InstallAppSection } from '@/ui/screens/profile/components/InstallAppSection';
 import { PlanSection } from '@/ui/screens/profile/components/PlanSection';
 import { styles } from '@/ui/screens/profile/styles';
 import { useProfile } from '@/ui/screens/profile/useProfile';
@@ -121,6 +122,7 @@ export function Profile() {
               )}
             />
             <PlanSection />
+            <InstallAppSection />
           </View>
         </KeyboardAwareScrollView>
         <KeyboardStickyView
