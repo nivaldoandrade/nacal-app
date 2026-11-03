@@ -21,9 +21,10 @@ Este repositório contém o **app frontend** (web + iOS + Android). O backend é
 
 ## Funcionalidades
 
-- **Autenticação completa**: Cadastro e login com e-mail/senha, recuperação de senha por código e login com **Google (OAuth 2.0 + PKCE)**;
+- **Autenticação completa**: Cadastro e login com e-mail/senha, **confirmação de e-mail por código**, recuperação de senha por código e login com **Google (OAuth 2.0 + PKCE)**;
+- **Beta fechado**: e-mails fora da allowlist da API recebem uma mensagem amigável, tanto no cadastro por e-mail quanto no login com Google;
 - **Sessão silenciosa**: Tokens persistem em AsyncStorage e o access token é renovado automaticamente em respostas `401` (interceptor de refresh no axios);
-- **Onboarding em 7 etapas**: Objetivo, gênero, data de nascimento, altura, peso, nível de atividade e criação de conta: o backend deriva o plano diário de calorias e macros (TDEE/BMR);
+- **Onboarding em 8 etapas**: Aceite dos Termos de Uso e da Política de Privacidade, objetivo, gênero, data de nascimento, altura, peso, nível de atividade e criação de conta: o backend deriva o plano diário de calorias e macros (TDEE/BMR);
 - **Home com visão do dia**: Calendário semanal, progresso dos macros no **MacroRainbow**, lista das refeições do dia e pull-to-refresh;
 - **Registro de refeição por foto ou áudio**: Captura de câmera (permissão usada somente no momento da foto) ou nota de voz com limite de **30 segundos** e playback para revisar antes de enviar; as fotos são normalizadas para JPEG (lado maior de 1024px, qualidade 0.9) e o app envia o **fuso do dispositivo** para a API nomear e classificar a refeição pelo horário local;
 - **Processamento assíncrono**: Upload da refeição e acompanhamento do status `UPLOADING → QUEUED → PROCESSING → SUCCESS | REJECTED | FAILED` (polling de 3s enquanto processa);
@@ -44,7 +45,8 @@ Este repositório contém o **app frontend** (web + iOS + Android). O backend é
 | ----------------- | ------------------------------------------------------------------------------------------------------------------------- |
 | `Welcome`         | Boas-vindas com login (e-mail/senha e Google) e links de cadastro/recuperação de senha                                    |
 | `OnboardingIntro` | Introdução exibida antes do onboarding                                                                                    |
-| `Onboarding`      | 7 etapas: `GoalStep`, `GenderStep`, `BirthDateStep`, `HeightStep`, `WeightStep`, `ActivityLevelStep`, `CreateAccountStep` |
+| `Onboarding`      | 8 etapas: `TermsStep`, `GoalStep`, `GenderStep`, `BirthDateStep`, `HeightStep`, `WeightStep`, `ActivityLevelStep`, `CreateAccountStep` |
+| `ConfirmEmail`    | Código de 6 dígitos enviado por e-mail, com reenvio (espera de 30s); pede a senha quando ela não está guardada na sessão |
 | `ForgotPassword`  | Solicitação do código de recuperação de senha                                                                             |
 | `ResetPassword`   | Redefinição da senha com o código recebido                                                                                |
 
@@ -118,7 +120,15 @@ Tela (src/ui)
 5. Enquanto o status é de processamento, `useGetMealById` refaz a consulta a cada **3 segundos** até um status terminal: `SUCCESS`, `REJECTED` ou `FAILED`;
 6. Em `SUCCESS`, a tela de detalhes mostra o nome/ícone da refeição (definidos pela API a partir do horário) e os alimentos, calorias e macros;
 7. Em `REJECTED`, o modal mostra um toast amigável com o motivo, limpa a captura, remove a query da refeição e invalida `['accounts']` para atualizar a cota;
-8. Em `FAILED`, o modal mostra um erro de processamento e permite tentar novamente.
+8. Em `FAILED`, o modal mostra um erro de processamento, limpa a captura, remove a query da refeição e invalida `['accounts']` (a API estorna a cota), permitindo tentar novamente.
+
+### Fluxo de cadastro por e-mail
+
+1. O usuário passa pelo onboarding (com o aceite dos termos) e cria a conta em `CreateAccountStep` → `POST /auth/sign-up`. A API cria um cadastro **pendente**, envia um código por e-mail e o app guarda a senha só em memória (`AuthContext`);
+2. O app abre `ConfirmEmail`. O código é enviado com a senha para `POST /auth/confirm-sign-up`: a API usa a senha para provar que quem confirma é quem criou o cadastro;
+3. Se a senha bater, o app faz login automático e segue para a home com o onboarding concluído;
+4. Se a API responder `passwordResetRequired: true` (senha diferente da do cadastro), a tela mostra "Por segurança, crie uma nova senha" e leva ao fluxo de esqueci a senha;
+5. Login com uma conta ainda não confirmada (`403 EMAIL_NOT_CONFIRMED`) leva para `ConfirmEmail`, que reenvia o código automaticamente. Se o app foi reaberto e a senha não está mais em memória, a tela mostra um campo de senha acima do código.
 
 ### Planos e pagamento (billing)
 
@@ -225,8 +235,10 @@ yarn ios                # build + run no iOS (expo run:ios)
 yarn android            # build + run no Android (expo run:android)
 
 # Web (produção)
-yarn export:web         # export estático para dist/
+yarn export:web         # export estático para dist/ (o postexport ajusta os assets)
 yarn serve:web          # serve o dist/ localmente
+yarn preview            # export + wrangler dev (Worker local)
+yarn deploy             # deploy de produção no Cloudflare Workers
 
 # Qualidade
 yarn lint               # ESLint (expo lint): único check com script
@@ -349,6 +361,19 @@ yarn serve:web    # serve dist/ localmente (npx serve dist)
 - O `public/` traz manifest, ícones 192/512/maskable, apple-touch-icon e splash para o app ser **instalável como PWA**;
 - `DesktopGate` bloqueia viewports com mais de **480px** no web (o produto é mobile-first); ao redimensionar para largura desktop, um aviso é exibido no lugar do app;
 - Ícones e splash são regenerados por `python3 scripts/generate-icons.py`; ver [`scripts/README.md`](./scripts/README.md).
+
+### Cloudflare Workers
+
+O deploy de produção usa o Worker `nacal-app` em `app.nacal.app`:
+
+- **Deploy**: `yarn deploy` (executa `scripts/deploy-prod.mjs`);
+- O script injeta as envs públicas de produção, roda `check-web-env.mjs`, gera `dist/`, move assets de `assets/node_modules` para `assets/vendor` e executa `wrangler deploy`;
+- `EXPO_PUBLIC_API_URL`, `EXPO_PUBLIC_COGNITO_CLIENT_ID`, `EXPO_PUBLIC_COGNITO_DOMAIN` e `EXPO_PUBLIC_WEB_URL` são públicas e ficam no script/config;
+- O check de ambiente falha o build se faltar variável ou se alguma URL apontar para localhost, LAN, `nafoodiary` ou `execute-api`;
+- O SPA fallback é feito por `assets.not_found_handling: "single-page-application"` em `wrangler.jsonc`;
+- O custom domain `app.nacal.app` é configurado em `wrangler.jsonc` (`routes` com `custom_domain: true`);
+- Headers de segurança e cache ficam em `public/_headers` (copiado para `dist/`): `X-Frame-Options: DENY` (anti-clickjacking), `X-Content-Type-Options: nosniff`, `Referrer-Policy`, `Permissions-Policy` (câmera e microfone só no próprio app), cache imutável de 1 ano para `/_expo/static/*` e `/assets/*` e revalidação do `index.html`;
+- Para conferir depois do deploy: `curl -I https://app.nacal.app`.
 
 ## Documentação relacionada
 
