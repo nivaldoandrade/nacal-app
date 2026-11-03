@@ -7,7 +7,8 @@ Expo SDK 57 / React Native 0.86 / React 19 / TypeScript strict. Expo APIs change
 - `yarn` (yarn.lock — do not use npm/pnpm)
 - `yarn start` · `yarn ios` · `yarn android` · `yarn web`
 - `yarn lint` — the only scripted check (`expo lint`). There is **no test suite and no typecheck script**; run `npx tsc --noEmit` for types.
-- Web deploy: `yarn export:web` then `yarn serve:web` (output in `dist/`).
+- Web build local: `yarn export:web` then `yarn serve:web` (output in `dist/`).
+- Web production deploy: `yarn deploy` (Cloudflare Worker `nacal-app`, `app.nacal.app`, via Wrangler).
 
 ## Architecture
 

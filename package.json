@@ -55,7 +55,8 @@
     "eslint-config-expo": "~57.0.2",
     "patch-package": "^8.0.1",
     "typescript": "~6.0.3",
-    "typescript-eslint": "^8.62.0"
+    "typescript-eslint": "^8.62.0",
+    "wrangler": "^4.156.0"
   },
   "scripts": {
     "start": "expo start",
@@ -63,9 +64,13 @@
     "ios": "expo run:ios",
     "web": "expo start --web",
     "export:web": "expo export --platform web",
+    "postexport:web": "node scripts/fix-web-assets.mjs",
     "serve:web": "npx serve dist",
     "lint": "expo lint",
-    "postinstall": "patch-package"
+    "postinstall": "patch-package",
+    "deploy": "yarn deploy:prod",
+    "deploy:prod": "node scripts/deploy-prod.mjs",
+    "preview": "yarn export:web && wrangler dev"
   },
   "private": true
 }
