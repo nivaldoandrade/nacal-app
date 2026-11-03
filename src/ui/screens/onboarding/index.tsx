@@ -16,6 +16,7 @@ export function Onboarding() {
   const { signOut } = useAuth();
   const form = useForm({
     defaultValues: {
+      acceptedTerms: false,
       profile: {
         name: '',
         height: '',

@@ -4,6 +4,9 @@ import { Goal } from '@/app/types/Goal';
 import * as z from 'zod';
 
 export const onboardingSchema = z.object({
+  acceptedTerms: z.boolean().refine((value) => value, {
+    error: 'Aceite os Termos de Uso e a Política de Privacidade para continuar.',
+  }),
   profile: z.object({
     name: z.string()
       .min(1, 'Informe o seu nome.')

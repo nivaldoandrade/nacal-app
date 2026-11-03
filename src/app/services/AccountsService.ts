@@ -123,6 +123,7 @@ export namespace AccountsService {
 
   export type CompleteOnboardingParams = {
     accessToken: string;
+    acceptedTerms: boolean;
     birthDate: string;
     height: number;
     weight: number;

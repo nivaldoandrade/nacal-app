@@ -26,6 +26,7 @@ export function useOnboardingSubmit({ flow }: IUseOnboardingSubmitParams) {
     const profile = getValues('profile');
 
     return {
+      acceptedTerms: getValues('acceptedTerms'),
       birthDate: profile.birthDate.toISOString().split('T')[0],
       height: Number(profile.height),
       weight: Number(profile.weight),
