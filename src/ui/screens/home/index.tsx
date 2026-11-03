@@ -65,11 +65,9 @@ export function Home() {
       if (!(Platform.OS === 'web' && !showSplash)) {
         return;
       }
-      SystemUI.setBackgroundColorAsync(theme.colors.lime[400]);
-
-      if (!!activeCreateMealModal) {
-        SystemUI.setBackgroundColorAsync(null);
-      }
+      SystemUI.setBackgroundColorAsync(
+        activeCreateMealModal ? theme.colors.black[800] : theme.colors.lime[400],
+      );
 
     }, [activeCreateMealModal, showSplash]),
   );

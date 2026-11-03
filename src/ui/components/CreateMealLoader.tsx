@@ -28,7 +28,7 @@ export function CreateMealLoader({ visible }: ISplashScreenLoader) {
     SystemUI.setBackgroundColorAsync(theme.colors.white);
 
     return () => {
-      SystemUI.setBackgroundColorAsync(null);
+      SystemUI.setBackgroundColorAsync(theme.colors.black[800]);
     };
   }, [visible]);
 

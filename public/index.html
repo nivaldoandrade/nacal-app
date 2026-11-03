@@ -58,6 +58,78 @@
         });
       })();
     </script>
+    <script id="theme-color-sync">
+      (function () {
+        function getThemeColorMeta() {
+          var meta = document.querySelector('meta[name="theme-color"]');
+
+          if (!meta) {
+            meta = document.createElement('meta');
+            meta.setAttribute('name', 'theme-color');
+            document.head.appendChild(meta);
+          }
+
+          return meta;
+        }
+
+        var isStandalone = window.matchMedia('(display-mode: standalone)').matches;
+
+        var MAX_ACCEPTED_LIGHTNESS_SUM = 479;
+
+        function toAcceptedThemeColor(color) {
+          var channels = color === 'white' ? ['255', '255', '255'] : color.match(/\d+/g);
+
+          if (!channels || channels.length < 3) {
+            return color;
+          }
+
+          var rgb = channels.slice(0, 3).map(Number);
+          var lightnessSum = Math.max(rgb[0], rgb[1], rgb[2]) + Math.min(rgb[0], rgb[1], rgb[2]);
+          var excess = Math.ceil((lightnessSum - MAX_ACCEPTED_LIGHTNESS_SUM) / 2);
+
+          if (excess <= 0) {
+            return color;
+          }
+
+          return 'rgb(' + rgb.map(function (channel) {
+            return channel - excess;
+          }).join(', ') + ')';
+        }
+
+        function syncThemeColor() {
+          var color = document.body.style.backgroundColor;
+
+          if (!color) {
+            return;
+          }
+
+          if (isStandalone) {
+            color = toAcceptedThemeColor(color);
+          }
+
+          var meta = getThemeColorMeta();
+
+          if (meta.getAttribute('content') !== color) {
+            meta.setAttribute('content', color);
+          }
+        }
+
+        function start() {
+          syncThemeColor();
+
+          new MutationObserver(syncThemeColor).observe(document.body, {
+            attributes: true,
+            attributeFilter: ['style'],
+          });
+        }
+
+        if (document.body) {
+          start();
+        } else {
+          document.addEventListener('DOMContentLoaded', start);
+        }
+      })();
+    </script>
     <script id="pwa-zoom-lock">
       (function () {
         var isStandalone =
