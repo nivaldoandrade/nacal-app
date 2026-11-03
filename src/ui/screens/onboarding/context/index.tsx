@@ -1,11 +1,11 @@
 import { useAuth } from '@/app/contexts/AuthContext/useAuth';
 import { AuthStackNavigatorProps, AuthStackParamList } from '@/app/navigation/AuthStack';
 import { OnboardingParamList } from '@/app/navigation/OnboardingStack';
-import { orderedSteps } from '@/ui/screens/onboarding/orderedSteps';
+import { orderedSteps, stepFields } from '@/ui/screens/onboarding/orderedSteps';
 import { OnboardingSchema } from '@/ui/screens/onboarding/schema';
 import { useOnboardingSubmit } from '@/ui/screens/onboarding/useOnboardingSubmit';
 import { useNavigation, useNavigationState } from '@react-navigation/native';
-import { createContext, useCallback, useMemo, type ReactNode } from 'react';
+import { createContext, useCallback, useEffect, useMemo, type ReactNode } from 'react';
 import { Path, useFormContext } from 'react-hook-form';
 
 const ONBOARDING_ROUTE_NAME = 'Onboarding' satisfies keyof AuthStackParamList;
@@ -90,6 +90,38 @@ export function OnboardingProvider({ children }: IOnboardingProviderProps) {
 
   const isLastStep = currentStepIndex === flowSteps.length - 1;
 
+  const findFirstInvalidStep = useCallback(async (untilIndex: number) => {
+    for (const step of flowSteps.slice(0, untilIndex)) {
+      if (!(await trigger(stepFields[step]))) {
+        return step;
+      }
+    }
+
+    return null;
+  }, [flowSteps, trigger]);
+
+  const goToStep = useCallback((step: keyof OnboardingParamList) => {
+    navigation.navigate('Onboarding', { screen: step, pop: true });
+  }, [navigation]);
+
+  useEffect(() => {
+    if (currentStepIndex <= 0) {
+      return;
+    }
+
+    let cancelled = false;
+
+    findFirstInvalidStep(currentStepIndex).then((invalidStep) => {
+      if (!cancelled && invalidStep) {
+        goToStep(invalidStep);
+      }
+    });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [currentStepIndex, findFirstInvalidStep, goToStep]);
+
   const advance = useCallback(async (field: Path<OnboardingSchema>) => {
     const isValid = await trigger(field);
 
@@ -98,12 +130,28 @@ export function OnboardingProvider({ children }: IOnboardingProviderProps) {
     }
 
     if (isLastStep && shouldShowOnboarding) {
+      const invalidStep = await findFirstInvalidStep(flowSteps.length);
+
+      if (invalidStep) {
+        goToStep(invalidStep);
+        return;
+      }
+
       await finishOnboarding();
       return;
     }
 
     nextStep();
-  }, [trigger, isLastStep, shouldShowOnboarding, finishOnboarding, nextStep]);
+  }, [
+    trigger,
+    isLastStep,
+    shouldShowOnboarding,
+    findFirstInvalidStep,
+    flowSteps.length,
+    goToStep,
+    finishOnboarding,
+    nextStep,
+  ]);
 
   return (
     <OnboardingContext value={{
