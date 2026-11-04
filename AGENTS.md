@@ -21,7 +21,7 @@ Expo SDK 57 / React Native 0.86 / React 19 / TypeScript strict. Expo APIs change
 
 - **patch-package**: `postinstall` aplica `patches/` a cada `yarn`. Hoje há 1 patch — `expo-modules-jsi` remove `SWIFT_RETURNS_RETAINED` dos construtores de `RuntimeScheduler.h` (bug upstream expo/expo#49214; quebrava o build iOS no Xcode 26.3/Swift 6.2 e ainda não tem fix publicado, até 57.1.1). Não remover o script `postinstall` nem editar `node_modules` à mão.
 - **Env vars**: `EXPO_PUBLIC_*` are read only through explicit property lists — `src/app/config/env.ts` (zod-parsed) and `useSocialAuth.ts`. Do not parse `process.env` wholesale; Metro must statically inline each var for production web export. Vars documented in `.env.example`.
-- **Web + native parity is required** (web is the primary validation surface). `Platform.OS` branches already exist for date picker, video, toasts, file handling, animations — check them before adding platform-specific code. `DesktopGate` blocks web viewports wider than 480px.
+- **Web + native parity is required** (web is the primary validation surface). `Platform.OS` branches already exist for date picker, toasts, file handling, animations — check them before adding platform-specific code. `DesktopGate` blocks web viewports wider than 480px.
 - **Lint rules that differ from defaults** (`eslint.config.js`): interfaces must be `I`-prefixed (`IFoo`), single quotes, semicolons, always-multiline trailing commas, `curly: all`, `eqeqeq`, `no-console: warn`.
 - Meal queries use `staleTime: Infinity` (manual refresh/pull-to-refresh is the model); `queryClient` has `retry: false`.
 - Meal processing is async (`UPLOADING → QUEUED → PROCESSING → SUCCESS/FAILED`) — poll status, don't block on upload.

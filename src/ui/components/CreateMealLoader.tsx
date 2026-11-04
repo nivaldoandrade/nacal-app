@@ -1,6 +1,5 @@
 import { theme } from '@/ui/styles/theme';
-import * as SystemUI from 'expo-system-ui';
-import { VideoView, useVideoPlayer } from 'expo-video';
+import LottieView from 'lottie-react-native';
 import { useEffect, useState } from 'react';
 import {
   Animated,
@@ -9,7 +8,7 @@ import {
   View,
 } from 'react-native';
 
-import chickenLeg from '@/ui/assets/chicken-leg.mp4';
+import iconLoading from '@/ui/assets/icon-loading.lottie';
 import { AppText } from '@/ui/components/AppText';
 import { Logo } from '@/ui/components/Logo';
 
@@ -17,20 +16,10 @@ interface ISplashScreenLoader {
   visible: boolean;
 }
 
+const ANIMATION_SIZE = { width: 200, height: 190 };
+
 export function CreateMealLoader({ visible }: ISplashScreenLoader) {
   const [opacityAnimated] = useState(() => new Animated.Value(visible ? 1 : 0));
-
-  useEffect(() => {
-    if (!(Platform.OS === 'web' && visible)) {
-      return;
-    }
-
-    SystemUI.setBackgroundColorAsync(theme.colors.white);
-
-    return () => {
-      SystemUI.setBackgroundColorAsync(theme.colors.black[800]);
-    };
-  }, [visible]);
 
   useEffect(() => {
     if (!visible) {
@@ -57,57 +46,32 @@ export function CreateMealLoader({ visible }: ISplashScreenLoader) {
         opacity: opacityAnimated, zIndex: 999,
       }]}
     >
-      <View style={{
-        flex: 1,
-        alignItems: 'center',
-        justifyContent: 'center',
-        backgroundColor: theme.colors.white,
-        gap: 8,
-      }}>
-        {Platform.OS === 'web' ? (
-          <WebVideo source={chickenLeg} />
-        ) : (
-          <NativeVideo source={chickenLeg} />
+      <View style={styles.container}>
+        {visible && (
+          <LottieView
+            source={iconLoading}
+            autoPlay
+            loop
+            style={ANIMATION_SIZE}
+            webStyle={ANIMATION_SIZE}
+          />
         )}
 
-        <Logo
-          width={150}
-          variant='onLight'
-        />
-        <AppText color={theme.colors.lime[900]}>
-          Está idenfiticando sua refeição
+        <Logo width={150} variant='onDark' />
+        <AppText color={theme.colors.gray[100]}>
+          Está identificando sua refeição
         </AppText>
       </View>
     </Animated.View>
   );
 }
 
-function WebVideo({ source }: { source: string }) {
-  return (
-    <video
-      src={source}
-      autoPlay
-      muted
-      loop
-      playsInline
-      style={{ width: 200, height: 200, objectFit: 'contain' }}
-    />
-  );
-}
-
-function NativeVideo({ source }: { source: number }) {
-  const player = useVideoPlayer(source, (p) => {
-    p.muted = true;
-    p.loop = true;
-    p.play();
-  });
-
-  return (
-    <VideoView
-      style={{ width: 200, height: 200 }}
-      player={player}
-      allowsPictureInPicture={false}
-      nativeControls={false}
-    />
-  );
-}
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: theme.colors.black[800],
+    gap: 8,
+  },
+});

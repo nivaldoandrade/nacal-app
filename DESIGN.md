@@ -278,7 +278,7 @@ The product's visual centerpiece: a semi-circular fan of four concentric rounded
 
 ### Motion
 - **MacroRainbow sweep:** each arc fills over 1000ms with an ease-in-out dash-offset animation when the day's numbers resolve.
-- **Meal-processing loader:** cross-fade in 300ms / out 350ms over a cloud canvas with a looping food animation.
+- **Meal-processing loader:** cross-fade in 300ms / out 350ms over an ink-deep canvas (matching the capture modals) with a looping Lottie (`src/ui/assets/icon-loading.lottie`) of the NaCal bowl being scanned by AI (rotating brand arc, scan line, neural dots, sparkles).
 - **Recording:** concentric ring borders expand/pulse while the user narrates a meal.
 
 ## Do's and Don'ts
