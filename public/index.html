@@ -8,7 +8,7 @@
     <link rel="manifest" href="/manifest.json" />
     <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
-    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <meta name="apple-mobile-web-app-title" content="NaCal" />
     <noscript>
       <style>
@@ -39,6 +39,28 @@
       html.pwa-standalone,
       html.pwa-standalone body {
         touch-action: pan-x pan-y;
+      }
+    </style>
+    <style id="pwa-standalone-viewport">
+      html.pwa-standalone {
+        overflow: hidden;
+        overscroll-behavior: none;
+        background-color: #d2f676;
+      }
+      html.pwa-translucent {
+        height: calc(100% + env(safe-area-inset-top, 0px));
+      }
+      html.pwa-standalone body {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+      }
+      html.pwa-translucent body {
+        bottom: auto;
+        height: 100vh;
+        height: 100lvh;
       }
     </style>
     <script id="pwa-install-prompt">
@@ -142,10 +164,59 @@
 
         document.documentElement.classList.add('pwa-standalone');
 
+        function detectTranslucentStatusBar() {
+          var probe = document.createElement('div');
+          probe.style.cssText = 'position:fixed;top:0;left:0;width:0;visibility:hidden;padding-top:env(safe-area-inset-top, 0px)';
+          document.body.appendChild(probe);
+          var insetTop = probe.offsetHeight;
+          document.body.removeChild(probe);
+
+          document.documentElement.classList.toggle('pwa-translucent', insetTop > 0);
+        }
+
+        function scheduleTranslucentDetection() {
+          detectTranslucentStatusBar();
+          requestAnimationFrame(detectTranslucentStatusBar);
+          setTimeout(detectTranslucentStatusBar, 300);
+          setTimeout(detectTranslucentStatusBar, 1000);
+        }
+
+        if (document.body) {
+          scheduleTranslucentDetection();
+        } else {
+          document.addEventListener('DOMContentLoaded', scheduleTranslucentDetection);
+        }
+
+        window.addEventListener('load', detectTranslucentStatusBar);
+        window.addEventListener('resize', detectTranslucentStatusBar);
+        window.addEventListener('scroll', function () {
+          if (window.scrollY !== 0) {
+            window.scrollTo(0, 0);
+          }
+        });
+        window.addEventListener('orientationchange', detectTranslucentStatusBar);
+
+        var viewport = document.querySelector('meta[name="viewport"]');
+
+        if (viewport) {
+          viewport.setAttribute(
+            'content',
+            'width=device-width, initial-scale=1, minimum-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover'
+          );
+        }
+
         function preventZoom(event) {
           event.preventDefault();
         }
 
+        function preventMultiTouch(event) {
+          if (event.touches && event.touches.length > 1) {
+            event.preventDefault();
+          }
+        }
+
+        document.addEventListener('touchstart', preventMultiTouch, { passive: false });
+        document.addEventListener('touchmove', preventMultiTouch, { passive: false });
         document.addEventListener('gesturestart', preventZoom, { passive: false });
         document.addEventListener('gesturechange', preventZoom, { passive: false });
         document.addEventListener('gestureend', preventZoom, { passive: false });
