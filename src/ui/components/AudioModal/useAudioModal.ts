@@ -150,7 +150,7 @@ export function useAudioModal({ visible, onRequestClose }: IUseAudioModalParams)
     }
 
     try {
-      await createMeal(recordedUri);
+      await createMeal({ fileOrUri: recordedUri });
     } catch (error) {
       console.error(error);
 

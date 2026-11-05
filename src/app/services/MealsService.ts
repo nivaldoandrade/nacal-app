@@ -39,6 +39,7 @@ export class MealsService extends Service {
         contentType: params.contentType,
         fileSize: params.fileSize,
         timeZone: params.timeZone,
+        description: params.description,
       },
     );
 
@@ -77,6 +78,7 @@ export namespace MealsService {
       contentType: string;
       fileSize: number;
       timeZone: string | undefined;
+      description?: string;
       file: File | undefined
     },
 

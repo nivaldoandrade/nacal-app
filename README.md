@@ -26,7 +26,7 @@ Este repositório contém o **app frontend** (web + iOS + Android). O backend é
 - **Sessão silenciosa**: Tokens persistem em AsyncStorage e o access token é renovado automaticamente em respostas `401` (interceptor de refresh no axios);
 - **Onboarding em 8 etapas**: Aceite dos Termos de Uso e da Política de Privacidade, objetivo, gênero, data de nascimento, altura, peso, nível de atividade e criação de conta: o backend deriva o plano diário de calorias e macros (TDEE/BMR);
 - **Home com visão do dia**: Calendário semanal, progresso dos macros no **MacroRainbow**, lista das refeições do dia e pull-to-refresh;
-- **Registro de refeição por foto ou áudio**: Captura de câmera (permissão usada somente no momento da foto) ou nota de voz com limite de **30 segundos** e playback para revisar antes de enviar; as fotos são normalizadas para JPEG (lado maior de 1024px, qualidade 0.9) e o app envia o **fuso do dispositivo** para a API nomear e classificar a refeição pelo horário local;
+- **Registro de refeição por foto ou áudio**: Captura de câmera (permissão usada somente no momento da foto) ou nota de voz com limite de **30 segundos** e playback para revisar antes de enviar; depois de tirar a foto, um campo opcional ("Quer contar algum detalhe?", até 300 caracteres) permite completar o que a foto não mostra, como uma bebida em copo opaco, um ingrediente escondido, a quantidade ou qual refeição foi; as fotos são normalizadas para JPEG (lado maior de 1024px, qualidade 0.9) e o app envia o **fuso do dispositivo** para a API nomear e classificar a refeição pelo horário local;
 - **Processamento assíncrono**: Upload da refeição e acompanhamento do status `UPLOADING → QUEUED → PROCESSING → SUCCESS | REJECTED | FAILED` (polling de 3s enquanto processa);
 - **Rejeição amigável**: Fotos sem comida, áudios sem fala e arquivos inválidos viram `REJECTED`, com toast explicativo, reset da captura e atualização da cota;
 - **Detalhes da refeição**: Total de calorias e quebra de macros por alimento e da refeição;
@@ -114,13 +114,13 @@ Tela (src/ui)
 ### Fluxo de criação de refeição
 
 1. Usuário toca no FAB da home e escolhe **foto** ou **áudio** (máx. 30s);
-2. `PhotoModal` (câmera) ou `AudioModal` (gravação + playback) captura o arquivo;
-3. `useCreateMeal` (via `getFileInfo`) normaliza imagens para JPEG e envia para `MealsService.create`, que chama `POST /create-meal` (com o `timeZone` IANA do dispositivo, via `expo-localization`) e faz o upload direto no S3 via **Presigned POST** (assinatura em base64);
+2. `PhotoModal` (câmera) ou `AudioModal` (gravação + playback) captura o arquivo; na revisão da foto, o `PhotoDescriptionInput` (`InputApp` com `tone='dark'`) recebe a descrição opcional;
+3. `useCreateMeal` (via `getFileInfo`) normaliza imagens para JPEG e envia para `MealsService.create`, que chama `POST /create-meal` (com o `timeZone` IANA do dispositivo, via `expo-localization`, e a `description` da foto quando preenchida) e faz o upload direto no S3 via **Presigned POST** (assinatura em base64);
 4. O backend valida o arquivo e dispara o processamento: o status avança por `UPLOADING → QUEUED → PROCESSING`;
 5. Enquanto o status é de processamento, `useGetMealById` refaz a consulta a cada **3 segundos** até um status terminal: `SUCCESS`, `REJECTED` ou `FAILED`;
-6. Em `SUCCESS`, a tela de detalhes mostra o nome/ícone da refeição (definidos pela API a partir do horário) e os alimentos, calorias e macros;
-7. Em `REJECTED`, o modal mostra um toast amigável com o motivo, limpa a captura, remove a query da refeição e invalida `['accounts']` para atualizar a cota;
-8. Em `FAILED`, o modal mostra um erro de processamento, limpa a captura, remove a query da refeição e invalida `['accounts']` (a API estorna a cota), permitindo tentar novamente.
+6. Em `SUCCESS`, a tela de detalhes mostra o nome/ícone da refeição (definidos pela API a partir do horário ou da refeição declarada no áudio ou na descrição da foto) e os alimentos, calorias e macros;
+7. Em `REJECTED`, o modal mostra um toast amigável com o motivo, limpa a captura (foto e descrição), remove a query da refeição e invalida `['accounts']` para atualizar a cota;
+8. Em `FAILED`, o modal mostra um erro de processamento, limpa a captura (foto e descrição), remove a query da refeição e invalida `['accounts']` (a API estorna a cota), permitindo tentar novamente.
 
 ### Fluxo de cadastro por e-mail
 
