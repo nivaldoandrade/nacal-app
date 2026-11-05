@@ -22,6 +22,7 @@ interface IUsePhotoModalParams {
 export function usePhotoModal({ onRequestClose }: IUsePhotoModalParams) {
   const [photoActionType, setPhotoActionType] = useState<PhotoActionType>('takePhoto');
   const [photoUri, setPhotoUri] = useState<string | null>(null);
+  const [description, setDescription] = useState('');
   const [isCapturing, setIsCapturing] = useState(false);
 
   const [permission, requestPermission] = useCameraPermissions();
@@ -60,6 +61,7 @@ export function usePhotoModal({ onRequestClose }: IUsePhotoModalParams) {
       resetCreateMeal();
       setPhotoActionType('takePhoto');
       setPhotoUri(null);
+      setDescription('');
       return;
     }
 
@@ -77,6 +79,7 @@ export function usePhotoModal({ onRequestClose }: IUsePhotoModalParams) {
       resetCreateMeal();
       setPhotoActionType('takePhoto');
       setPhotoUri(null);
+      setDescription('');
       return;
     }
 
@@ -105,7 +108,7 @@ export function usePhotoModal({ onRequestClose }: IUsePhotoModalParams) {
     }
 
     try {
-      await createMeal(photoUri);
+      await createMeal({ fileOrUri: photoUri, description });
     } catch (error) {
       console.error(error);
 
@@ -134,6 +137,7 @@ export function usePhotoModal({ onRequestClose }: IUsePhotoModalParams) {
   function handleTryAgain() {
     setPhotoActionType('takePhoto');
     setPhotoUri(null);
+    setDescription('');
   }
 
   async function handleTakePicture() {
@@ -169,11 +173,13 @@ export function usePhotoModal({ onRequestClose }: IUsePhotoModalParams) {
     photoActionType,
     permission,
     photoUri,
+    description,
     isCapturing,
     cameraRef,
     requestPermission,
     handleTakePicture,
     handleTryAgain,
     handleSend,
+    setDescription,
   };
 }

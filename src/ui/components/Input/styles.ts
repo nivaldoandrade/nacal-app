@@ -39,16 +39,29 @@ export const styles = StyleSheet.create({
   },
 });
 
+const inputBase = {
+  flex: 1,
+  borderWidth: 1,
+  borderRadius: 10,
+  padding: 14,
+  minHeight: 52,
+  fontFamily: theme.fontFamily.sans.regular,
+  fontSize: theme.fontSize.base,
+};
+
+const disabledVariant = {
+  true: {
+    opacity: 0.5,
+  },
+  false: {
+    opacity: 1,
+  },
+};
+
 export const input = cva({
   base: {
-    flex: 1,
+    ...inputBase,
     backgroundColor: theme.colors.white,
-    borderWidth: 1,
-    borderRadius: 10,
-    padding: 14,
-    minHeight: 52,
-    fontFamily: theme.fontFamily.sans.regular,
-    fontSize: theme.fontSize.base,
     color: theme.colors.black[700],
   },
   variants: {
@@ -63,14 +76,33 @@ export const input = cva({
         borderColor: theme.colors.support.red,
       },
     },
-    disabled: {
-      true: {
-        opacity: 0.5,
+    disabled: disabledVariant,
+  },
+  defaultVariants: {
+    intent: 'default',
+    disabled: false,
+  },
+});
+
+export const inputDark = cva({
+  base: {
+    ...inputBase,
+    backgroundColor: theme.colors.black[700],
+    color: theme.colors.gray[100],
+  },
+  variants: {
+    intent: {
+      default: {
+        borderColor: theme.colors.gray['700/50'],
       },
-      false: {
-        opacity: 1,
+      focus: {
+        borderColor: theme.colors.lime[600],
+      },
+      error: {
+        borderColor: theme.colors.support.red,
       },
     },
+    disabled: disabledVariant,
   },
   defaultVariants: {
     intent: 'default',

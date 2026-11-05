@@ -1,5 +1,5 @@
 import { AppText } from '@/ui/components/AppText';
-import { input, InputVariant, styles } from '@/ui/components/Input/styles';
+import { input, inputDark, InputVariant, styles } from '@/ui/components/Input/styles';
 import { theme } from '@/ui/styles/theme';
 import { useState } from 'react';
 import { BlurEvent, FocusEvent, TextInput, TextInputProps, View } from 'react-native';
@@ -10,6 +10,7 @@ type InputAppProps = Omit<TextInputProps, 'readOnly'> & InputVariant & {
 	ref?: React.RefObject<TextInput | null>;
 	sufix?: string;
 	rightAdornment?: React.ReactNode;
+	tone?: 'light' | 'dark';
 };
 
 export function InputApp({
@@ -22,6 +23,7 @@ export function InputApp({
 	onBlur,
 	sufix,
 	rightAdornment,
+	tone = 'light',
 	...props
 }: InputAppProps) {
 	const [isFocused, setIsFocused] = useState(false);
@@ -54,7 +56,7 @@ export function InputApp({
 				<Component
 					placeholderTextColor={theme.colors.gray[700]}
 					style={[
-						input({ intent: getInputStatus(), disabled }),
+						(tone === 'dark' ? inputDark : input)({ intent: getInputStatus(), disabled }),
 						rightAdornment && styles.adornmentPadding,
 						style,
 					]}

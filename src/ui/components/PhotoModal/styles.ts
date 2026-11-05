@@ -7,6 +7,10 @@ export const styles = StyleSheet.create({
     paddingHorizontal: 20,
   },
 
+  keyboardAvoiding: {
+    flex: 1,
+  },
+
   content: {
     flex: 1,
     alignItems: 'center',

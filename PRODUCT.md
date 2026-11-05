@@ -34,7 +34,7 @@ Simple and friendly where nutrition trackers are rigid and clinical. The core me
 
 - Seven-step onboarding captures goal, gender, birth date, height, weight, and activity level; the backend derives a personalized daily macro plan (calories, proteins, carbohydrates, fats).
 - Home shows a weekly calendar, macro progress (MacroRainbow visualization), and the day's meals with per-food and total macros.
-- Meal creation from photo or audio; playback review for audio before sending.
+- Meal creation from photo or audio; playback review for audio before sending. After taking the photo, an optional free-text note ("Quer contar algum detalhe?", up to 300 characters) lets the user add what the photo doesn't show (a drink in an opaque cup, hidden ingredients, quantities, which meal it was).
 - Meal details screen with total calories and macro breakdown.
 - Goals are editable (manual override of the derived plan). Profile is editable (name, birth date, height, weight, gender).
 - Camera permission is used only at the moment of capture; the app states this to the user.
