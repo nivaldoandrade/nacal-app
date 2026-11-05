@@ -4,42 +4,21 @@ import { ButtonApp } from '@/ui/components/Button';
 import { MacroRainbow } from '@/ui/components/MacroRainbow';
 import { styles } from '@/ui/screens/home/components/CurrentGoal/styles';
 import { useHomeContext } from '@/ui/screens/home/context/useHomeContext';
+import { useDaySummary } from '@/ui/screens/home/useDaySummary';
+import { formatDateLabel } from '@/ui/screens/home/utils/formatDateLabel';
 import { theme } from '@/ui/styles/theme';
 import { isSameDate } from '@/ui/utils/isSameDate';
 import { ChevronLeftIcon, ChevronRightIcon } from 'lucide-react-native';
-import { useMemo } from 'react';
 import { View } from 'react-native';
 
 export function CurrentGoal() {
-  const { isLoading } = useHomeContext();
-  const { meals, selectedDate, onNextDate, onPrevDate } = useHomeContext();
+  const { isLoading, selectedDate, onNextDate, onPrevDate } = useHomeContext();
 
   const isFutureDate = isSameDate(selectedDate, new Date());
 
   const { account } = useAccount();
 
-  const summary = useMemo(() => {
-    const result = meals.flatMap(meal => meal.foods).reduce((acc, item) => {
-      acc.calories += item.calories;
-      acc.proteins = acc.proteins + item.proteins;
-      acc.carbohydrates += item.carbohydrates;
-      acc.fats += item.fats;
-
-      return acc;
-    }, {
-      calories: 0,
-      proteins: 0,
-      carbohydrates: 0,
-      fats: 0,
-    });
-
-    return {
-      calories: Math.round(result.calories),
-      proteins: parseFloat(result.proteins.toFixed(1)),
-      carbohydrates: parseFloat(result.carbohydrates.toFixed(1)),
-      fats: parseFloat(result.fats.toFixed(1)),
-    };
-  }, [meals]);
+  const summary = useDaySummary();
 
   return (
     <View style={styles.container}>
@@ -82,16 +61,3 @@ export function CurrentGoal() {
   );
 }
 
-function formatDateLabel(date: Date) {
-  const now = new Date();
-
-  const isToday = date.toDateString() === now.toDateString();
-
-  const dateFormatted = new Intl.DateTimeFormat('pt-BR', {
-    weekday: isToday ? undefined : 'long',
-    day: 'numeric',
-    month: 'long',
-  }).format(date).toUpperCase();
-
-  return isToday ? `HOJE, ${dateFormatted}` : dateFormatted;
-}

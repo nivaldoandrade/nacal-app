@@ -7,8 +7,20 @@ export const styles = StyleSheet.create({
     backgroundColor: theme.colors.lime[400],
   },
 
+  refreshControl: {
+    zIndex: 1,
+  },
+
+  listArea: {
+    flex: 1,
+    marginTop: -8,
+    overflow: 'hidden',
+  },
+
   flatListContainer: {
     minHeight: '100%',
+    borderTopLeftRadius: 16,
+    borderTopRightRadius: 16,
     borderBottomLeftRadius: Platform.OS === 'web' ? 0 : 16,
     borderBottomRightRadius: Platform.OS === 'web' ? 0 : 16,
     backgroundColor: theme.colors.white,
