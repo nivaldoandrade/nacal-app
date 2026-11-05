@@ -8,7 +8,7 @@ import { styles } from '@/ui/screens/home/components/UserHeader/styles';
 import { theme } from '@/ui/styles/theme';
 import { useNavigation } from '@react-navigation/native';
 import { TargetIcon } from 'lucide-react-native';
-import { Platform, TouchableOpacity, View } from 'react-native';
+import { TouchableOpacity, View } from 'react-native';
 
 export function UserHeader() {
   const { navigate } = useNavigation<AppStackNavigatorProps>();
@@ -16,10 +16,7 @@ export function UserHeader() {
 
   const { account } = useAccount();
   return (
-    <View style={[
-      styles.container, {
-        paddingTop: Platform.OS === 'ios' ? 0 : top,
-      }]}>
+    <View style={[styles.container, { paddingTop: top }]}>
       <TouchableOpacity
         style={styles.userInfo}
         onPress={() => navigate('Profile')}
