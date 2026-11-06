@@ -2,7 +2,9 @@ import { useGetMealById } from '@/app/hooks/queries/useGetMealById';
 import { AppStackScreenRouteProps } from '@/app/navigation/AppStack';
 import { Food } from '@/app/types/Food';
 import { AppText } from '@/ui/components/AppText';
+import { ButtonApp } from '@/ui/components/Button';
 import { Skeleton } from '@/ui/components/Skeleton';
+import { AddItemModal } from '@/ui/screens/mealDetails/components/AddItemModal';
 import { Header } from '@/ui/screens/mealDetails/components/Header';
 import { Macros } from '@/ui/screens/mealDetails/components/Macros';
 import { styles } from '@/ui/screens/mealDetails/styles';
@@ -10,13 +12,15 @@ import { theme } from '@/ui/styles/theme';
 import { useFocusEffect } from '@react-navigation/native';
 import { StatusBar } from 'expo-status-bar';
 import * as SystemUI from 'expo-system-ui';
-import { useCallback, useMemo } from 'react';
+import { PlusIcon } from 'lucide-react-native';
+import { useCallback, useMemo, useState } from 'react';
 import { FlatList, ListRenderItemInfo, Platform, View } from 'react-native';
 import { useSafeAreaInsets } from '@/ui/hooks/useSafeAreaInsets';
 
 export function MealDetails({ route }: AppStackScreenRouteProps<'MealDetails'>) {
   const { mealId } = route.params;
   const { meal, isLoading } = useGetMealById(mealId);
+  const [isAddItemModalVisible, setIsAddItemModalVisible] = useState(false);
 
   const { bottom } = useSafeAreaInsets();
 
@@ -112,6 +116,25 @@ export function MealDetails({ route }: AppStackScreenRouteProps<'MealDetails'>) 
     [isLoading],
   );
 
+  const renderListFooter = useCallback(
+    () => (
+      meal?.canAddItems
+        ? (
+          <View style={styles.listFooter}>
+            <ButtonApp
+              intent='neutral'
+              leftIcon={<PlusIcon size={18} color={theme.colors.black[700]} />}
+              onPress={() => setIsAddItemModalVisible(true)}
+            >
+              Adicionar item
+            </ButtonApp>
+          </View>
+        )
+        : null
+    ),
+    [meal?.canAddItems],
+  );
+
   return (
     <>
       <StatusBar animated style='light' />
@@ -136,9 +159,15 @@ export function MealDetails({ route }: AppStackScreenRouteProps<'MealDetails'>) 
             paddingBottom: bottom,
           }}
           ListEmptyComponent={renderListEmpty}
+          ListFooterComponent={renderListFooter}
           renderItem={renderFoodItem}
         />
       </View>
+      <AddItemModal
+        mealId={mealId}
+        visible={isAddItemModalVisible}
+        onClose={() => setIsAddItemModalVisible(false)}
+      />
     </>
   );
 }

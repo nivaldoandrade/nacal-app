@@ -29,6 +29,25 @@ export class MealsService extends Service {
     };
   }
 
+  static async addItems(
+    params: MealsService.AddItems['params'],
+  ): Promise<MealsService.AddItems['response']> {
+    const { data } = await this.client.post<MealsService.AddItems['rawResponse']>(
+      `meals/${params.mealId}/items`,
+      {
+        text: params.text,
+      },
+    );
+
+    return {
+      ...data,
+      meal: {
+        ...data.meal,
+        createdAt: new Date(data.meal.createdAt),
+      },
+    };
+  }
+
   static async create(
     params: MealsService.Create['params'],
   ): Promise<MealsService.Create['response']> {
@@ -91,4 +110,23 @@ export namespace MealsService {
   }
 
   export type GetByIdResponse = MealItem;
+
+  export type AddItems = {
+    params: {
+      mealId: string;
+      text: string;
+    };
+
+    rawResponse: {
+      meal: Omit<MealItem, 'createdAt'> & { createdAt: string };
+      addedFoods: Food[];
+      skippedFoodsCount: number;
+    };
+
+    response: {
+      meal: MealItem;
+      addedFoods: Food[];
+      skippedFoodsCount: number;
+    };
+  }
 }

@@ -1,3 +1,4 @@
+import { ValueOf } from '@/app/utils/ValueOf';
 
 export type Food = {
   name: string;
@@ -6,4 +7,12 @@ export type Food = {
   proteins: number;
   carbohydrates: number;
   fats: number;
+  source?: FoodSource;
 }
+
+export const FoodSource = {
+  INITIAL: 'INITIAL',
+  ADDED: 'ADDED',
+} as const;
+
+export type FoodSource = ValueOf<typeof FoodSource>;

@@ -18,6 +18,7 @@ export type MealItem = {
   name: string;
   icon: string;
   foods: Food[];
+  canAddItems: boolean;
   createdAt: Date;
 }
 

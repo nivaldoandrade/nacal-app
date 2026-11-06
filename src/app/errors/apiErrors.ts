@@ -14,6 +14,11 @@ export const ErrorCode = {
   INVALID_GRANT: 'INVALID_GRANT',
   RESOURCE_NOT_FOUND: 'RESOURCE_NOT_FOUND',
 
+  // Meal
+  MEAL_NOT_EDITABLE: 'MEAL_NOT_EDITABLE',
+  MEAL_ITEM_LIMIT_REACHED: 'MEAL_ITEM_LIMIT_REACHED',
+  NO_FOOD_IDENTIFIED: 'NO_FOOD_IDENTIFIED',
+
   // Billing
   FREE_QUOTA_EXCEEDED: 'FREE_QUOTA_EXCEEDED',
   TRIAL_NOT_AVAILABLE: 'TRIAL_NOT_AVAILABLE',
@@ -46,6 +51,9 @@ export const ApiErrorMessages: Record<ErrorCode, string> = {
   INVALID_CREDENTIALS: 'E-mail ou senha incorretos.',
   INVALID_GRANT: 'Falha na autenticação. Tente novamente.',
   RESOURCE_NOT_FOUND: 'Recurso não encontrado.',
+  MEAL_NOT_EDITABLE: 'Essa refeição não pode mais receber itens.',
+  MEAL_ITEM_LIMIT_REACHED: 'Essa refeição já recebeu o máximo de itens adicionados.',
+  NO_FOOD_IDENTIFIED: 'Não encontrei nenhum alimento nesse texto. Tente descrever de outro jeito.',
   FREE_QUOTA_EXCEEDED: 'Você atingiu o limite de refeições do plano Free deste mês. Assine o Pro para continuar sem limites.',
   TRIAL_NOT_AVAILABLE: 'O teste grátis ainda não está disponível para esta conta. Escolha um plano para assinar.',
   BILLING_ERROR: 'Não conseguimos falar com o serviço de pagamento agora. Tente novamente em instantes.',

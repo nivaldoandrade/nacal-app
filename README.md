@@ -30,6 +30,7 @@ Este repositório contém o **app frontend** (web + iOS + Android). O backend é
 - **Processamento assíncrono**: Upload da refeição e acompanhamento do status `UPLOADING → QUEUED → PROCESSING → SUCCESS | REJECTED | FAILED` (polling de 3s enquanto processa);
 - **Rejeição amigável**: Fotos sem comida, áudios sem fala e arquivos inválidos viram `REJECTED`, com toast explicativo, reset da captura e atualização da cota;
 - **Detalhes da refeição**: Total de calorias e quebra de macros por alimento e da refeição;
+- **Adicionar item por texto**: Na tela de detalhes, o botão "Adicionar item" abre um modal para completar a refeição com um texto curto ("um copo de coca 350ml"); a IA identifica só os itens novos, que entram na lista e atualizam os totais. Disponível nas primeiras 24h, até 5 vezes por refeição;
 - **Metas editáveis**: Override manual do plano derivado (calorias, proteínas, carboidratos e gorduras);
 - **Perfil editável**: Nome, data de nascimento, altura, peso e gênero;
 - **Planos e assinatura**: Free com **20 refeições AI/mês** e Pro (**R$ 9,99/mês** ou **R$ 99,90/ano**) ilimitado; **trial de 7 dias grátis** sem cartão (1 por conta), checkout via Asaas, cancelamento na tela de Planos e ativação via webhook refletida em `GET /me`;
@@ -55,7 +56,7 @@ Este repositório contém o **app frontend** (web + iOS + Android). O backend é
 | Tela          | Descrição                                                                               |
 | ------------- | --------------------------------------------------------------------------------------- |
 | `Home`        | Calendário semanal, MacroRainbow, refeições do dia, FAB de criação e pull-to-refresh    |
-| `MealDetails` | Detalhes da refeição: status de processamento, calorias e macros (por alimento e total) |
+| `MealDetails` | Detalhes da refeição: status de processamento, calorias e macros (por alimento e total) e "Adicionar item" (`AddItemModal`) |
 | `EditGoals`   | Edição manual das metas diárias de calorias e macros                                    |
 | `Profile`     | Edição do perfil e acesso às metas                                                      |
 | `Plans`       | Planos Free vs Pro, trial, cota mensal, checkout (Asaas) e cancelamento                 |
@@ -121,6 +122,14 @@ Tela (src/ui)
 6. Em `SUCCESS`, a tela de detalhes mostra o nome/ícone da refeição (definidos pela API a partir do horário ou da refeição declarada no áudio ou na descrição da foto) e os alimentos, calorias e macros;
 7. Em `REJECTED`, o modal mostra um toast amigável com o motivo, limpa a captura (foto e descrição), remove a query da refeição e invalida `['accounts']` para atualizar a cota;
 8. Em `FAILED`, o modal mostra um erro de processamento, limpa a captura (foto e descrição), remove a query da refeição e invalida `['accounts']` (a API estorna a cota), permitindo tentar novamente.
+
+### Fluxo de adicionar item
+
+1. Em `MealDetails`, o botão "Adicionar item" aparece no fim da lista só quando `GET /meals/{id}` devolve `canAddItems: true` (refeição `SUCCESS`, nas primeiras 24h e abaixo dos limites);
+2. O `AddItemModal` recebe o texto (até 300 caracteres, via `LimitedTextInput`) e `useAddMealItems` chama `MealsService.addItems` → `POST /meals/{id}/items` (síncrono, sem polling);
+3. No sucesso, a resposta substitui a query `['meal', id]`, as queries `['meals', ...]` da home são invalidadas, o modal fecha e um toast confirma; se a API descartou itens por falta de vaga (`skippedFoodsCount > 0`), um toast avisa;
+4. `NO_FOOD_IDENTIFIED` e `RATE_LIMIT_EXCEEDED` mostram um toast dentro do modal, que continua aberto; `MEAL_NOT_EDITABLE`, `MEAL_ITEM_LIMIT_REACHED`, `FREE_QUOTA_EXCEEDED` e `RESOURCE_NOT_FOUND` fecham o modal com toast. Em qualquer erro, `['meal', id]` é invalidada para atualizar `canAddItems`;
+5. Adicionar item não consome cota, mas é bloqueado para Free sem cota restante.
 
 ### Fluxo de cadastro por e-mail
 
@@ -287,7 +296,7 @@ src/
 └── ui/                         # Apresentação (alias @/ui/*)
     ├── App.tsx
     ├── components/             # Button, Input, FormGroup, MacroRainbow,
-    │                           # PhotoModal, AudioModal, DesktopGate, ...
+    │                           # PhotoModal, AudioModal, LimitedTextInput, DesktopGate, ...
     ├── screens/
     │   ├── welcome/            # index.tsx · styles.ts
     │   ├── onboarding/         # steps/ · context/ · schema.ts · use*.ts

@@ -25,4 +25,9 @@ export const styles = StyleSheet.create({
     borderColor: theme.colors.gray[400],
     gap: 4,
   },
+
+  listFooter: {
+    marginHorizontal: 20,
+    marginTop: 24,
+  },
 });
