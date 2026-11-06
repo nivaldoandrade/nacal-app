@@ -231,6 +231,7 @@ Flat by default. Depth is expressed through tonal layering — mist-100/200 well
 
 ### Shadow Vocabulary
 - **Fab / Floating action** (`0 4px 5px rgba(0,0,0,0.3)`): the floating + button and other floating actions.
+- **Pinned bar** (`0 4px 8px rgba(0,0,0,0.12)`): the home compact day summary that slides over the meal list on scroll.
 - **Bottom sheet** (raised, `0 5px 16px #000` at strong opacity): sign-in and create-meal sheets lifted over the app.
 
 ### Named Rules

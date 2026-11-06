@@ -11,6 +11,14 @@ export const styles = StyleSheet.create({
     backgroundColor: theme.colors.lime[400],
     borderBottomLeftRadius: 16,
     borderBottomRightRadius: 16,
+    elevation: 4,
+    shadowColor: '#000',
+    shadowOpacity: 0.12,
+    shadowOffset: {
+      width: 0,
+      height: 4,
+    },
+    shadowRadius: 8,
   },
 
   content: {
