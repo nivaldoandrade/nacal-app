@@ -11,6 +11,12 @@ const CLOSING_ERROR_CODES = new Set<ErrorCode>([
   ErrorCode.FREE_QUOTA_EXCEEDED,
 ]);
 
+function getUnidentifiedFoodsMessage(count: number) {
+  return count === 1
+    ? 'Um item não foi identificado; se quiser, adicione de novo com mais detalhes.'
+    : 'Alguns itens não foram identificados; se quiser, adicione de novo com mais detalhes.';
+}
+
 function getAddedFoodsMessage(count: number) {
   return count === 1
     ? 'Item adicionado à refeição.'
@@ -46,15 +52,27 @@ export function useAddItemModal({ mealId, onClose }: IUseAddItemModalParams) {
     }
 
     try {
-      const { addedFoods, skippedFoodsCount } = await addMealItems({ mealId, text: text.trim() });
+      const {
+        addedFoods,
+        skippedFoodsCount,
+        unidentifiedFoodsCount,
+      } = await addMealItems({ mealId, text: text.trim() });
 
       setText('');
       onClose();
 
+      const notes: string[] = [];
+
+      if (unidentifiedFoodsCount > 0) {
+        notes.push(getUnidentifiedFoodsMessage(unidentifiedFoodsCount));
+      }
+
       if (skippedFoodsCount > 0) {
-        toast.info(
-          `${getAddedFoodsMessage(addedFoods.length)} Alguns itens ficaram de fora porque a refeição chegou ao limite.`,
-        );
+        notes.push('Alguns itens ficaram de fora porque a refeição chegou ao limite.');
+      }
+
+      if (notes.length > 0) {
+        toast.info([getAddedFoodsMessage(addedFoods.length), ...notes].join(' '));
         return;
       }
 

@@ -121,12 +121,14 @@ export namespace MealsService {
       meal: Omit<MealItem, 'createdAt'> & { createdAt: string };
       addedFoods: Food[];
       skippedFoodsCount: number;
+      unidentifiedFoodsCount: number;
     };
 
     response: {
       meal: MealItem;
       addedFoods: Food[];
       skippedFoodsCount: number;
+      unidentifiedFoodsCount: number;
     };
   }
 }

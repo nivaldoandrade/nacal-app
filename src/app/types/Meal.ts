@@ -19,6 +19,7 @@ export type MealItem = {
   icon: string;
   foods: Food[];
   canAddItems: boolean;
+  unidentified: UnidentifiedKind | null;
   createdAt: Date;
 }
 
@@ -47,3 +48,18 @@ export const MealInput = {
 } as const;
 
 export type MealInput = ValueOf<typeof MealInput>;
+
+export const UnidentifiedKind = {
+  DRINK: 'DRINK',
+  PACKAGED: 'PACKAGED',
+  COVERED: 'COVERED',
+  OTHER: 'OTHER',
+} as const;
+
+export type UnidentifiedKind = ValueOf<typeof UnidentifiedKind>;
+
+const unidentifiedKinds: readonly string[] = Object.values(UnidentifiedKind);
+
+export function isUnidentifiedKind(value: unknown): value is UnidentifiedKind {
+  return typeof value === 'string' && unidentifiedKinds.includes(value);
+}

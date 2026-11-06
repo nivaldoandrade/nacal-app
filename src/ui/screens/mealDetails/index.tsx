@@ -1,12 +1,14 @@
 import { useGetMealById } from '@/app/hooks/queries/useGetMealById';
 import { AppStackScreenRouteProps } from '@/app/navigation/AppStack';
 import { Food } from '@/app/types/Food';
+import { isUnidentifiedKind, UnidentifiedKind } from '@/app/types/Meal';
 import { AppText } from '@/ui/components/AppText';
 import { ButtonApp } from '@/ui/components/Button';
 import { Skeleton } from '@/ui/components/Skeleton';
 import { AddItemModal } from '@/ui/screens/mealDetails/components/AddItemModal';
 import { Header } from '@/ui/screens/mealDetails/components/Header';
 import { Macros } from '@/ui/screens/mealDetails/components/Macros';
+import { UnidentifiedHint } from '@/ui/screens/mealDetails/components/UnidentifiedHint';
 import { styles } from '@/ui/screens/mealDetails/styles';
 import { theme } from '@/ui/styles/theme';
 import { useFocusEffect } from '@react-navigation/native';
@@ -21,6 +23,7 @@ export function MealDetails({ route }: AppStackScreenRouteProps<'MealDetails'>) 
   const { mealId } = route.params;
   const { meal, isLoading } = useGetMealById(mealId);
   const [isAddItemModalVisible, setIsAddItemModalVisible] = useState(false);
+  const [addItemHint, setAddItemHint] = useState<UnidentifiedKind | null>(null);
 
   const { bottom } = useSafeAreaInsets();
 
@@ -116,23 +119,43 @@ export function MealDetails({ route }: AppStackScreenRouteProps<'MealDetails'>) 
     [isLoading],
   );
 
+  const openAddItemModal = useCallback((hint: UnidentifiedKind | null) => {
+    setAddItemHint(hint);
+    setIsAddItemModalVisible(true);
+  }, []);
+
+  const canAddItems = meal?.canAddItems ?? false;
+  const rawUnidentified = meal?.unidentified;
+  const unidentified = isUnidentifiedKind(rawUnidentified) ? rawUnidentified : null;
+
   const renderListFooter = useCallback(
-    () => (
-      meal?.canAddItems
-        ? (
-          <View style={styles.listFooter}>
-            <ButtonApp
-              intent='neutral'
-              leftIcon={<PlusIcon size={18} color={theme.colors.black[700]} />}
-              onPress={() => setIsAddItemModalVisible(true)}
-            >
-              Adicionar item
-            </ButtonApp>
-          </View>
-        )
-        : null
-    ),
-    [meal?.canAddItems],
+    () => {
+      if (!canAddItems) {
+        return null;
+      }
+
+      return (
+        <View style={styles.listFooter}>
+          {unidentified
+            ? (
+              <UnidentifiedHint
+                kind={unidentified}
+                onAddItem={() => openAddItemModal(unidentified)}
+              />
+            )
+            : (
+              <ButtonApp
+                intent='neutral'
+                leftIcon={<PlusIcon size={18} color={theme.colors.black[700]} />}
+                onPress={() => openAddItemModal(null)}
+              >
+                Adicionar item
+              </ButtonApp>
+            )}
+        </View>
+      );
+    },
+    [canAddItems, unidentified, openAddItemModal],
   );
 
   return (
@@ -165,6 +188,7 @@ export function MealDetails({ route }: AppStackScreenRouteProps<'MealDetails'>) 
       </View>
       <AddItemModal
         mealId={mealId}
+        hint={addItemHint}
         visible={isAddItemModalVisible}
         onClose={() => setIsAddItemModalVisible(false)}
       />
