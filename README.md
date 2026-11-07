@@ -26,7 +26,7 @@ Este repositório contém o **app frontend** (web + iOS + Android). O backend é
 - **Sessão silenciosa**: Tokens persistem em AsyncStorage e o access token é renovado automaticamente em respostas `401` (interceptor de refresh no axios);
 - **Onboarding em 8 etapas**: Aceite dos Termos de Uso e da Política de Privacidade, objetivo, gênero, data de nascimento, altura, peso, nível de atividade e criação de conta: o backend deriva o plano diário de calorias e macros (TDEE/BMR);
 - **Home com visão do dia**: Calendário semanal, progresso dos macros no **MacroRainbow**, lista das refeições do dia e pull-to-refresh;
-- **Registro de refeição por foto ou áudio**: Captura de câmera (permissão usada somente no momento da foto) ou nota de voz com limite de **30 segundos** e playback para revisar antes de enviar; depois de tirar a foto, um campo opcional ("Quer contar algum detalhe?", até 300 caracteres) permite completar o que a foto não mostra, como uma bebida em copo opaco, um ingrediente escondido, a quantidade ou qual refeição foi; as fotos são normalizadas para JPEG (lado maior de 1024px, qualidade 0.9) e o app envia o **fuso do dispositivo** para a API nomear e classificar a refeição pelo horário local;
+- **Registro de refeição por foto ou áudio**: Captura de câmera (permissão usada somente no momento da foto) ou nota de voz com limite de **30 segundos** e playback para revisar antes de enviar; depois de tirar a foto, um campo opcional ("Quer contar algum detalhe?", até 300 caracteres) permite completar o que a foto não mostra, como uma bebida em copo opaco, um ingrediente escondido, a quantidade ou qual refeição foi; as fotos são normalizadas para JPEG (lado maior de 1024px, qualidade 0.9) e o app envia o **fuso do dispositivo** para a API nomear e classificar a refeição pelo horário local e agrupá-la no dia local correto;
 - **Processamento assíncrono**: Upload da refeição e acompanhamento do status `UPLOADING → QUEUED → PROCESSING → SUCCESS | REJECTED | FAILED` (polling de 3s enquanto processa);
 - **Rejeição amigável**: Fotos sem comida, áudios sem fala e arquivos inválidos viram `REJECTED`, com toast explicativo, reset da captura e atualização da cota;
 - **Detalhes da refeição**: Total de calorias e quebra de macros por alimento e da refeição;
@@ -426,6 +426,10 @@ O deploy de produção usa o Worker `nacal-app` em `app.nacal.app`:
 - O status é acompanhado pelo `useGetMealById` no modal de criação e na tela de detalhes (polling de 3s);
 - Na home, o refresh é manual: use o pull-to-refresh (`staleTime: Infinity`);
 - O polling termina em `SUCCESS`, `REJECTED` ou `FAILED`; se ficar em `FAILED`, veja os logs da Lambda `processMeal` na API.
+
+### Refeição aparece no dia errado (ou some do dia)
+- O dia pedido em `GET /meals?date=` e as chaves `['meals', YYYY-MM-DD]` usam a **data local** do aparelho (`toLocalIsoDate` em `src/app/utils/`), nunca `toISOString()`: em UTC, refeições registradas depois das 21h no Brasil cairiam no dia seguinte;
+- A API grava o dia da refeição no fuso enviado no `create-meal` (fallback `America/Sao_Paulo`); app e API precisam concordar nessa regra.
 
 ### Refeição rejeitada (`REJECTED`)
 - É uma rejeição esperada: o arquivo é inválido, a foto não tem comida/bebida ou o áudio não tem fala/alimentos;
