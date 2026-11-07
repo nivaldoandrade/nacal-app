@@ -13,6 +13,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { AudioModule, RecordingPresets, setAudioModeAsync, useAudioRecorder } from 'expo-audio';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Platform } from 'react-native';
+import { toLocalIsoDate } from '@/app/utils/toLocalIsoDate';
 
 interface IUseAudioModalParams {
   visible: boolean;
@@ -99,7 +100,7 @@ export function useAudioModal({ visible, onRequestClose }: IUseAudioModalParams)
     }
 
     if (meal.status === MealStatus.SUCCESS) {
-      const isoDate = meal.createdAt.toISOString().split('T')[0];
+      const isoDate = toLocalIsoDate(meal.createdAt);
 
       const unsubscribe = addListener('transitionEnd', ({ data }) => {
         unsubscribe();

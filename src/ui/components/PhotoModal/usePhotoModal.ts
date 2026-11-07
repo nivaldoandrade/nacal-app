@@ -14,6 +14,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { useCameraPermissions } from 'expo-camera';
 import { useEffect, useRef, useState } from 'react';
 import { Platform } from 'react-native';
+import { toLocalIsoDate } from '@/app/utils/toLocalIsoDate';
 
 interface IUsePhotoModalParams {
   onRequestClose: (animationType?: CreateMealModalAnimationType) => void;
@@ -84,7 +85,7 @@ export function usePhotoModal({ onRequestClose }: IUsePhotoModalParams) {
     }
 
     if (meal.status === MealStatus.SUCCESS) {
-      const isoDate = meal.createdAt.toISOString().split('T')[0];
+      const isoDate = toLocalIsoDate(meal.createdAt);
 
       const unsubscribe = addListener('transitionEnd', ({ data }) => {
         unsubscribe();
