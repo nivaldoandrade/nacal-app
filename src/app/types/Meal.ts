@@ -46,6 +46,7 @@ export type RejectionReason = ValueOf<typeof RejectionReason>;
 export const MealInput = {
   PICTURE: 'PICTURE',
   AUDIO: 'AUDIO',
+  TEXT: 'TEXT',
 } as const;
 
 export type MealInput = ValueOf<typeof MealInput>;

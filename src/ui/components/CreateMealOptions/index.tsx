@@ -1,7 +1,7 @@
 import { AppText } from '@/ui/components/AppText';
 import type { CreateMealModalType } from '@/ui/components/CreateMealModals';
 import { styles } from '@/ui/components/CreateMealOptions/styles';
-import { CameraIcon, LucideIcon, MicIcon } from 'lucide-react-native';
+import { CameraIcon, CaseSensitiveIcon, LucideIcon, MicIcon } from 'lucide-react-native';
 import { Platform, Pressable, PressableProps, View } from 'react-native';
 
 interface ICreateMealOptionsProps {
@@ -28,6 +28,12 @@ export function CreateMealOptions({
         label='Foto'
         disabled={disabled}
         onPress={() => onSelect?.('photo')}
+      />
+      <OptionButton
+        icon={CaseSensitiveIcon}
+        label='Texto'
+        disabled={disabled}
+        onPress={() => onSelect?.('text')}
       />
     </View>
   );

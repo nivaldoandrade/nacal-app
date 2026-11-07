@@ -49,7 +49,7 @@ export function useEditGoals() {
       goBack();
     } catch (error) {
       if (isAxiosError<ApiError>(error)) {
-        const code = error.response?.data.error.code;
+        const code = error.response?.data?.error?.code;
         const message = getErrorMessage(code);
         code === 'VALIDATION' && form.setError('root.api', { message });
         toast.error(message);

@@ -1,7 +1,8 @@
 import { AudioModal } from '@/ui/components/AudioModal';
 import { PhotoModal } from '@/ui/components/PhotoModal';
+import { TextMealModal } from '@/ui/components/TextMealModal';
 
-export type CreateMealModalType = 'audio' | 'photo' | null;
+export type CreateMealModalType = 'audio' | 'photo' | 'text' | null;
 export type CreateMealModalAnimationType = 'slide' | 'fade';
 
 interface ICreateMealModalsProps {
@@ -23,6 +24,10 @@ export function CreateMealModals({
 
   if (activeCreateMealModal === 'photo') {
     return <PhotoModal {...props} />;
+  }
+
+  if (activeCreateMealModal === 'text') {
+    return <TextMealModal {...props} />;
   }
 
   return null;

@@ -3,6 +3,7 @@ import { Food } from '@/app/types/Food';
 import { MealItem } from '@/app/types/Meal';
 
 export class MealsService extends Service {
+  private static readonly CREATE_FROM_TEXT_TIMEOUT_MS = 35_000;
 
   static async listByDay(date: string): Promise<MealsService.ListByDayResponse> {
 
@@ -36,6 +37,29 @@ export class MealsService extends Service {
       `meals/${params.mealId}/items`,
       {
         text: params.text,
+      },
+    );
+
+    return {
+      ...data,
+      meal: {
+        ...data.meal,
+        createdAt: new Date(data.meal.createdAt),
+      },
+    };
+  }
+
+  static async createFromText(
+    params: MealsService.CreateFromText['params'],
+  ): Promise<MealsService.CreateFromText['response']> {
+    const { data } = await this.client.post<MealsService.CreateFromText['rawResponse']>(
+      'meals/text',
+      {
+        text: params.text,
+        timeZone: params.timeZone,
+      },
+      {
+        timeout: MealsService.CREATE_FROM_TEXT_TIMEOUT_MS,
       },
     );
 
@@ -108,6 +132,23 @@ export namespace MealsService {
     }
 
     response: Omit<MealsService.Create['rawResponse'], 'uploadSignature'>;
+  }
+
+  export type CreateFromText = {
+    params: {
+      text: string;
+      timeZone: string | undefined;
+    };
+
+    rawResponse: {
+      meal: Omit<MealItem, 'createdAt'> & { createdAt: string };
+      unidentifiedFoodsCount: number;
+    };
+
+    response: {
+      meal: MealItem;
+      unidentifiedFoodsCount: number;
+    };
   }
 
   export type GetByIdResponse = MealItem;

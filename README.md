@@ -1,8 +1,8 @@
 # NaCal
 
-**NaCal** é um aplicativo de controle de dieta simples e amigável: "Controle sua dieta de forma simples." O usuário registra suas refeições em segundos através de uma **foto do prato** ou uma **nota de voz de até 30 segundos**, que são analisadas automaticamente por IA para identificar os alimentos, quantidades e macronutrientes (proteínas, carboidratos e gorduras). A partir de um onboarding curto, o backend calcula um plano diário personalizado de calorias e macros, e a home mostra em um único olhar o progresso do dia contra esse plano.
+**NaCal** é um aplicativo de controle de dieta simples e amigável: "Controle sua dieta de forma simples." O usuário registra suas refeições em segundos através de uma **foto do prato**, uma **nota de voz de até 30 segundos** ou uma **frase digitada**, que são analisadas automaticamente por IA para identificar os alimentos, quantidades e macronutrientes (proteínas, carboidratos e gorduras). A partir de um onboarding curto, o backend calcula um plano diário personalizado de calorias e macros, e a home mostra em um único olhar o progresso do dia contra esse plano.
 
-Diferente de contadores de calorias tradicionais, não há busca manual de alimentos, leitura de código de barras ou digitação de dados. A interface é toda em **português brasileiro**, com voz acolhedora e sem julgamentos.
+Diferente de contadores de calorias tradicionais, não há busca manual de alimentos, leitura de código de barras nem preenchimento de macros: mesmo quando o usuário prefere escrever, basta uma frase. A interface é toda em **português brasileiro**, com voz acolhedora e sem julgamentos.
 
 Este repositório contém o **app frontend** (web + iOS + Android). O backend é uma API serverless separada; ver [Documentação relacionada](#documentação-relacionada).
 
@@ -27,6 +27,7 @@ Este repositório contém o **app frontend** (web + iOS + Android). O backend é
 - **Onboarding em 8 etapas**: Aceite dos Termos de Uso e da Política de Privacidade, objetivo, gênero, data de nascimento, altura, peso, nível de atividade e criação de conta: o backend deriva o plano diário de calorias e macros (TDEE/BMR);
 - **Home com visão do dia**: Calendário semanal, progresso dos macros no **MacroRainbow**, lista das refeições do dia e pull-to-refresh;
 - **Registro de refeição por foto ou áudio**: Captura de câmera (permissão usada somente no momento da foto) ou nota de voz com limite de **30 segundos** e playback para revisar antes de enviar; depois de tirar a foto, um campo opcional ("Quer contar algum detalhe?", até 300 caracteres) permite completar o que a foto não mostra, como uma bebida em copo opaco, um ingrediente escondido, a quantidade ou qual refeição foi; as fotos são normalizadas para JPEG (lado maior de 1024px, qualidade 0.9) e o app envia o **fuso do dispositivo** para a API nomear e classificar a refeição pelo horário local e agrupá-la no dia local correto;
+- **Registro de refeição por texto**: Terceira opção do FAB ("Texto"): o usuário descreve a refeição numa frase (até 500 caracteres, ex.: "no almoço comi arroz, feijão, um bife e salada") e a API devolve a refeição pronta numa chamada síncrona, sem upload nem polling. Consome 1 refeição da cota, como foto e áudio;
 - **Processamento assíncrono**: Upload da refeição e acompanhamento do status `UPLOADING → QUEUED → PROCESSING → SUCCESS | REJECTED | FAILED` (polling de 3s enquanto processa);
 - **Rejeição amigável**: Fotos sem comida, áudios sem fala e arquivos inválidos viram `REJECTED`, com toast explicativo, reset da captura e atualização da cota;
 - **Detalhes da refeição**: Total de calorias e quebra de macros por alimento e da refeição;
@@ -77,7 +78,7 @@ O app é dividido em **duas camadas** com path aliases definidos no `tsconfig.js
 │               (convenção: index.tsx · styles.ts · use*.ts        │
 │                · schema.ts)                                      │
 │  components/  AppText · Button · Input · MacroRainbow ·          │
-│               PhotoModal · AudioModal · DesktopGate · ...        │
+│               PhotoModal · AudioModal · TextMealModal · ...      │
 └───────────────┬──────────────────────────────────────────────────┘
                 │  tela → hook local (use*) → query/mutation
                 ▼
@@ -86,9 +87,9 @@ O app é dividido em **duas camadas** com path aliases definidos no `tsconfig.js
 │                                                                  │
 │  hooks/queries/     useAccount · useListMealByDay ·              │
 │                     useGetMealById · useGetPlans                 │
-│  hooks/mutations/   useCreateMeal · useUpdateGoal ·              │
-│                     useUpdateProfile · billing (trial/checkout/  │
-│                     cancel)                                      │
+│  hooks/mutations/   useCreateMeal · useCreateTextMeal ·          │
+│                     useUpdateGoal · useUpdateProfile ·           │
+│                     billing (trial/checkout/cancel)              │
 │  services/          Service (axios + interceptor 401→refresh) ·  │
 │                     AuthService · AccountsService ·              │
 │                     MealsService · GoalService · BillingService  │
@@ -115,7 +116,7 @@ Tela (src/ui)
 
 ### Fluxo de criação de refeição
 
-1. Usuário toca no FAB da home e escolhe **foto** ou **áudio** (máx. 30s);
+1. Usuário toca no FAB da home e escolhe **foto** ou **áudio** (máx. 30s); o **texto** segue um fluxo próprio, descrito abaixo;
 2. `PhotoModal` (câmera) ou `AudioModal` (gravação + playback) captura o arquivo; na revisão da foto, o `PhotoDescriptionInput` (`InputApp` com `tone='dark'`) recebe a descrição opcional;
 3. `useCreateMeal` (via `getFileInfo`) normaliza imagens para JPEG e envia para `MealsService.create`, que chama `POST /create-meal` (com o `timeZone` IANA do dispositivo, via `expo-localization`, e a `description` da foto quando preenchida) e faz o upload direto no S3 via **Presigned POST** (assinatura em base64);
 4. O backend valida o arquivo e dispara o processamento: o status avança por `UPLOADING → QUEUED → PROCESSING`;
@@ -123,6 +124,14 @@ Tela (src/ui)
 6. Em `SUCCESS`, a tela de detalhes mostra o nome/ícone da refeição (definidos pela API a partir do horário ou da refeição declarada no áudio ou na descrição da foto) e os alimentos, calorias e macros;
 7. Em `REJECTED`, o modal mostra um toast amigável com o motivo, limpa a captura (foto e descrição), remove a query da refeição e invalida `['accounts']` para atualizar a cota;
 8. Em `FAILED`, o modal mostra um erro de processamento, limpa a captura (foto e descrição), remove a query da refeição e invalida `['accounts']` (a API estorna a cota), permitindo tentar novamente.
+
+### Fluxo de refeição por texto
+
+1. No FAB da home, a opção **Texto** abre o `TextMealModal` (mesmo layout do `AddItemModal`, com `LimitedTextInput` de até 500 caracteres e o aviso de cota);
+2. Ao tocar em "Registrar", `useCreateTextMeal` chama `MealsService.createFromText` → `POST /meals/text` com o `timeZone` do dispositivo (`getDeviceTimeZone`, compartilhado com `useCreateMeal`). A chamada é síncrona, com timeout de 35s no axios (o API Gateway corta em 30s, então o modal nunca fica preso no loader); o `CreateMealLoader` cobre o modal enquanto ela roda e fechar o modal fica bloqueado nesse intervalo;
+3. No sucesso, a resposta já traz a refeição: o app grava `['meal', id]` no cache, insere a refeição direto na lista `['meals', dia]` (sem refetch, porque o índice da listagem na API é eventualmente consistente e poderia voltar sem ela), invalida `['accounts']`, navega para `MealDetails` e fecha o modal (sem polling). Se a API descartou menções que não diziam o que era (`unidentifiedFoodsCount > 0`), um toast avisa e, quando a refeição ainda aceita itens (`canAddItems`), sugere completar em "Adicionar item";
+4. `NO_FOOD_IDENTIFIED` e `RATE_LIMIT_EXCEEDED` mostram um toast dentro do modal e mantêm o texto para editar; `FREE_QUOTA_EXCEEDED` fecha o modal e leva para `Plans`; outros erros mostram um toast de erro e também mantêm o texto. Em qualquer erro, `['meals', hoje]` e `['accounts']` são invalidadas: se a API gravou a refeição mas a resposta se perdeu (rede, app em segundo plano), ela aparece na home e o usuário não reenvia o texto sem saber;
+5. Texto sem nenhum alimento não consome cota; o horário da refeição é o do envio, e "no almoço comi…" só muda o nome e o ícone.
 
 ### Fluxo de adicionar item
 
@@ -278,7 +287,7 @@ src/
 │   ├── hooks/
 │   │   ├── queries/            # useAccount, useListMealByDay, useGetMealById,
 │   │   │                       # useGetPlans
-│   │   ├── mutations/          # useCreateMeal, useUpdateGoal, useUpdateProfile,
+│   │   ├── mutations/          # useCreateMeal, useCreateTextMeal, useUpdateGoal, useUpdateProfile,
 │   │   │                       # useStartTrial, useCreateCheckout, useCancelSubscription
 │   │   └── useSocialAuth.ts    # Google OAuth 2.0 + PKCE
 │   ├── libs/
@@ -286,6 +295,7 @@ src/
 │   │   ├── queryClient.ts      # retry: false
 │   │   ├── sonner.ts           # platform-split de toast (web/native)
 │   │   ├── getCheckoutReturnUrl.ts  # returnUrl do checkout Asaas
+│   │   ├── getDeviceTimeZone.ts  # fuso IANA do aparelho (expo-localization → Intl)
 │   │   ├── getFileInfo.ts      # normalização de imagem e MIME
 │   │   └── getMealRejectionMessage.ts  # copy de REJECTED
 │   ├── navigation/             # RootStack, AuthStack, AppStack, OnboardingStack
@@ -298,7 +308,7 @@ src/
 └── ui/                         # Apresentação (alias @/ui/*)
     ├── App.tsx
     ├── components/             # Button, Input, FormGroup, MacroRainbow,
-    │                           # PhotoModal, AudioModal, LimitedTextInput, DesktopGate, ...
+    │                           # PhotoModal, AudioModal, TextMealModal, LimitedTextInput, DesktopGate, ...
     ├── screens/
     │   ├── welcome/            # index.tsx · styles.ts
     │   ├── onboarding/         # steps/ · context/ · schema.ts · use*.ts
