@@ -71,5 +71,5 @@ export function getApiErrorCode(error: unknown): ErrorCode | undefined {
     return undefined;
   }
 
-  return error.response?.data.error.code;
+  return error.response?.data?.error?.code;
 }
