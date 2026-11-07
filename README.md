@@ -430,6 +430,7 @@ O deploy de produção usa o Worker `nacal-app` em `app.nacal.app`:
 ### Refeição aparece no dia errado (ou some do dia)
 - O dia pedido em `GET /meals?date=` e as chaves `['meals', YYYY-MM-DD]` usam a **data local** do aparelho (`toLocalIsoDate` em `src/app/utils/`), nunca `toISOString()`: em UTC, refeições registradas depois das 21h no Brasil cairiam no dia seguinte;
 - A API grava o dia da refeição no fuso enviado no `create-meal` (fallback `America/Sao_Paulo`); app e API precisam concordar nessa regra.
+- A hora exibida na home usa o `timeZone` devolvido pelo `GET /meals` (o fuso do registro), não o fuso atual do aparelho: uma refeição feita em viagem continua com a hora de onde foi registrada. Sem `timeZone` (ou com um fuso inválido), cai no fuso do aparelho.
 
 ### Refeição rejeitada (`REJECTED`)
 - É uma rejeição esperada: o arquivo é inválido, a foto não tem comida/bebida ou o áudio não tem fala/alimentos;

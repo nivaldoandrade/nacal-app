@@ -87,6 +87,7 @@ export namespace MealsService {
       icon: string;
       foods: Food[];
       createdAt: string;
+      timeZone?: string;
     }[]
   };
 

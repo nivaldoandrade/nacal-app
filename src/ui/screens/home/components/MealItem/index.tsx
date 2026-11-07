@@ -50,7 +50,7 @@ export function MealItem({ meal }: IMealItemProps) {
   return (
     <View style={[styles.container, { opacity: isLoading ? 0.4 : 1 }]}>
       <AppText color={theme.colors.gray[700]} style={{ opacity: 0.8 }}>
-        {formatTime(meal.createdAt)}
+        {formatTime(meal.createdAt, meal.timeZone)}
       </AppText>
       <View style={styles.mealItem}>
         <Pressable
@@ -142,8 +142,33 @@ function MacroLabel({ children }: { children: React.ReactNode }) {
   );
 }
 
-function formatTime(dateString: string) {
+function formatTime(dateString: string, timeZone?: string) {
   const date = new Date(dateString);
+
+  if (timeZone) {
+    try {
+      const parts = new Intl.DateTimeFormat('en-US', {
+        timeZone,
+        hour: '2-digit',
+        minute: '2-digit',
+        hourCycle: 'h23',
+      }).formatToParts(date);
+
+      const hours = parts.find(part => part.type === 'hour')?.value;
+      const minutes = parts.find(part => part.type === 'minute')?.value;
+
+      if (hours && minutes) {
+        return `${hours}h${minutes}`;
+      }
+    } catch {
+      return formatDeviceTime(date);
+    }
+  }
+
+  return formatDeviceTime(date);
+}
+
+function formatDeviceTime(date: Date) {
   const hours = String(date.getHours()).padStart(2, '0');
   const minutes = String(date.getMinutes()).padStart(2, '0');
 

@@ -7,6 +7,7 @@ export type Meal = {
   icon: string;
   foods: Food[];
   createdAt: string;
+  timeZone?: string;
 }
 
 export type MealItem = {
