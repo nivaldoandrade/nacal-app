@@ -14,17 +14,17 @@ People tracking their diet day to day, logging what they eat on the go. Their jo
 
 ## Product Purpose
 
-NaCal lets a person control their diet simply. "Controle sua dieta de forma simples." Success is a user who opens the app, logs a meal with a photo or a voice note, and immediately understands their daily progress against a macro plan generated from a short onboarding.
+NaCal lets a person control their diet simply. "Controle sua dieta de forma simples." Success is a user who opens the app, logs a meal with a photo, a voice note, or a short sentence, and immediately understands their daily progress against a macro plan generated from a short onboarding.
 
 ## Positioning
 
-Simple and friendly where nutrition trackers are rigid and clinical. The core mechanism is frictionless logging: take a photo of the plate or say what you ate, and the backend turns it into foods and macros. A neighboring calorie-counting app could not truthfully copy this — no manual food search, no barcode scanning, no data entry.
+Simple and friendly where nutrition trackers are rigid and clinical. The core mechanism is frictionless logging: take a photo of the plate, say what you ate, or type it in one sentence, and the backend turns it into foods and macros. A neighboring calorie-counting app could not truthfully copy this — no manual food search, no barcode scanning, no data entry beyond a single sentence.
 
 ## Operating Context
 
 - Brazilian Portuguese user-facing copy throughout.
-- Logging happens on the move: photo capture or a voice note capped at 30 seconds.
-- Meal processing is asynchronous: the app uploads, then polls status through `UPLOADING → QUEUED → PROCESSING → SUCCESS/FAILED` before showing foods and macros.
+- Logging happens on the move: photo capture, a voice note capped at 30 seconds, or a short text (up to 500 characters) when neither fits.
+- Photo and audio processing is asynchronous: the app uploads, then polls status through `UPLOADING → QUEUED → PROCESSING → SUCCESS/FAILED` before showing foods and macros. A text meal is processed synchronously and comes back ready.
 - Day-based view: a weekly calendar with today's meals and macro progress vs. goal.
 - Auth via Cognito: Google (OAuth2 + PKCE) and email/password; tokens persist in AsyncStorage with silent refresh on 401.
 - Files upload via presigned POST (S3-style, base64-encoded signature).
@@ -34,7 +34,7 @@ Simple and friendly where nutrition trackers are rigid and clinical. The core me
 
 - Seven-step onboarding captures goal, gender, birth date, height, weight, and activity level; the backend derives a personalized daily macro plan (calories, proteins, carbohydrates, fats).
 - Home shows a weekly calendar, macro progress (MacroRainbow visualization), and the day's meals with per-food and total macros.
-- Meal creation from photo or audio; playback review for audio before sending. After taking the photo, an optional free-text note ("Quer contar algum detalhe?", up to 300 characters) lets the user add what the photo doesn't show (a drink in an opaque cup, hidden ingredients, quantities, which meal it was).
+- Meal creation from photo, audio, or text; playback review for audio before sending. Text ("Texto" in the create sheet) takes one sentence of up to 500 characters ("no almoço comi arroz, feijão e um bife"); the meal comes back ready, counts toward the monthly quota only when foods are found, and is logged at the time it is sent ("no almoço" only sets the meal name and icon). After taking the photo, an optional free-text note ("Quer contar algum detalhe?", up to 300 characters) lets the user add what the photo doesn't show (a drink in an opaque cup, hidden ingredients, quantities, which meal it was).
 - Meal details screen with total calories and macro breakdown. "Adicionar item" lets the user complete a processed meal with a short text ("um copo de coca 350ml"); the AI identifies only the new items and they are appended to the meal. Available in the first 24 hours, up to 5 times per meal; it doesn't consume quota but is blocked for Free users with no quota left. When a photo shows something the AI can't identify (opaque cup, closed package, covered container), the meal details show a gentle hint ("Tinha algo no copo?") that opens "Adicionar item"; it disappears after the first addition or when the 24h window closes. Editing or removing existing items is not available yet.
 - Goals are editable (manual override of the derived plan). Profile is editable (name, birth date, height, weight, gender).
 - Camera permission is used only at the moment of capture; the app states this to the user.

@@ -48,6 +48,26 @@ export class MealsService extends Service {
     };
   }
 
+  static async createFromText(
+    params: MealsService.CreateFromText['params'],
+  ): Promise<MealsService.CreateFromText['response']> {
+    const { data } = await this.client.post<MealsService.CreateFromText['rawResponse']>(
+      'meals/text',
+      {
+        text: params.text,
+        timeZone: params.timeZone,
+      },
+    );
+
+    return {
+      ...data,
+      meal: {
+        ...data.meal,
+        createdAt: new Date(data.meal.createdAt),
+      },
+    };
+  }
+
   static async create(
     params: MealsService.Create['params'],
   ): Promise<MealsService.Create['response']> {
@@ -108,6 +128,23 @@ export namespace MealsService {
     }
 
     response: Omit<MealsService.Create['rawResponse'], 'uploadSignature'>;
+  }
+
+  export type CreateFromText = {
+    params: {
+      text: string;
+      timeZone: string | undefined;
+    };
+
+    rawResponse: {
+      meal: Omit<MealItem, 'createdAt'> & { createdAt: string };
+      unidentifiedFoodsCount: number;
+    };
+
+    response: {
+      meal: MealItem;
+      unidentifiedFoodsCount: number;
+    };
   }
 
   export type GetByIdResponse = MealItem;
