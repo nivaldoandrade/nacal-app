@@ -3,6 +3,7 @@ import { Food } from '@/app/types/Food';
 import { MealItem } from '@/app/types/Meal';
 
 export class MealsService extends Service {
+  private static readonly CREATE_FROM_TEXT_TIMEOUT_MS = 35_000;
 
   static async listByDay(date: string): Promise<MealsService.ListByDayResponse> {
 
@@ -56,6 +57,9 @@ export class MealsService extends Service {
       {
         text: params.text,
         timeZone: params.timeZone,
+      },
+      {
+        timeout: MealsService.CREATE_FROM_TEXT_TIMEOUT_MS,
       },
     );
 

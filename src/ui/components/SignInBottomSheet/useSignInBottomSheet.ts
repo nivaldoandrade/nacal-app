@@ -60,7 +60,7 @@ export function useSignInBottomSheet({ ref, initialEmail }: IUseSignInBottomShee
       bottomSheetModalRef.current?.dismiss();
     } catch (error) {
       if (isAxiosError<ApiError>(error)) {
-        const code = error.response?.data.error.code;
+        const code = error.response?.data?.error?.code;
 
         if (code === ErrorCode.EMAIL_NOT_CONFIRMED) {
           bottomSheetModalRef.current?.dismiss();

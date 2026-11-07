@@ -14,7 +14,32 @@ export function useCreateTextMeal() {
     }),
     onSuccess: ({ meal }) => {
       queryClient.setQueryData<MealItem>(['meal', meal.id], meal);
-      queryClient.invalidateQueries({ queryKey: ['meals', toLocalIsoDate(meal.createdAt)] });
+      queryClient.setQueryData<MealsService.ListByDayResponse>(
+        ['meals', toLocalIsoDate(meal.createdAt)],
+        (current) => {
+          if (!current || current.meals.some(({ id }) => id === meal.id)) {
+            return current;
+          }
+
+          return {
+            meals: [
+              {
+                id: meal.id,
+                name: meal.name,
+                icon: meal.icon,
+                foods: meal.foods,
+                createdAt: meal.createdAt.toISOString(),
+                timeZone: getDeviceTimeZone(),
+              },
+              ...current.meals,
+            ],
+          };
+        },
+      );
+      queryClient.invalidateQueries({ queryKey: ['accounts'] });
+    },
+    onError: () => {
+      queryClient.invalidateQueries({ queryKey: ['meals', toLocalIsoDate(new Date())] });
       queryClient.invalidateQueries({ queryKey: ['accounts'] });
     },
   });

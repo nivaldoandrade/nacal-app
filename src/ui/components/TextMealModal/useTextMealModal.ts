@@ -8,10 +8,14 @@ import { useNavigation } from '@react-navigation/native';
 import { useState } from 'react';
 import { Keyboard, Platform } from 'react-native';
 
-function getUnidentifiedFoodsMessage(count: number) {
-  return count === 1
-    ? 'Um item não foi identificado. Se quiser, complete em “Adicionar item”.'
-    : 'Alguns itens não foram identificados. Se quiser, complete em “Adicionar item”.';
+function getUnidentifiedFoodsMessage(count: number, canAddItems: boolean) {
+  const message = count === 1
+    ? 'Um item não foi identificado.'
+    : 'Alguns itens não foram identificados.';
+
+  return canAddItems
+    ? `${message} Se quiser, complete em “Adicionar item”.`
+    : message;
 }
 
 interface IUseTextMealModalParams {
@@ -62,7 +66,7 @@ export function useTextMealModal({ onRequestClose }: IUseTextMealModalParams) {
       openMealDetails(meal.id);
 
       if (unidentifiedFoodsCount > 0) {
-        toast.info(getUnidentifiedFoodsMessage(unidentifiedFoodsCount));
+        toast.info(getUnidentifiedFoodsMessage(unidentifiedFoodsCount, meal.canAddItems));
       }
     } catch (error) {
       console.error(error);

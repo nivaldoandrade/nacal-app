@@ -65,11 +65,11 @@ export function useSocialAuth({ onSuccess }: IUseSocialAuthParams) {
       await onSuccess(response);
     } catch (error) {
       if (isAxiosError<ApiError>(error)) {
-        if (error.response?.data.error.code === ErrorCode.INVALID_GRANT) {
+        if (error.response?.data?.error?.code === ErrorCode.INVALID_GRANT) {
           await AuthTokenManager.remove();
         }
 
-        toast.error(getErrorMessage(error.response?.data.error.code));
+        toast.error(getErrorMessage(error.response?.data?.error?.code));
         return;
       }
 
