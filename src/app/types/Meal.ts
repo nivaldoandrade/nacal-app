@@ -20,6 +20,7 @@ export type MealItem = {
   icon: string;
   foods: Food[];
   canAddItems: boolean;
+  canRemoveItems: boolean;
   unidentified: UnidentifiedKind | null;
   createdAt: Date;
 }

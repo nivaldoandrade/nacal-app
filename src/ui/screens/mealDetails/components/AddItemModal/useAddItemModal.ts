@@ -30,7 +30,7 @@ interface IUseAddItemModalParams {
 
 export function useAddItemModal({ mealId, onClose }: IUseAddItemModalParams) {
   const [text, setText] = useState('');
-  const { addMealItems, isPending } = useAddMealItems();
+  const { addMealItems, isPending } = useAddMealItems(mealId);
 
   const canSubmit = text.trim().length > 0 && !isPending;
 
@@ -56,7 +56,7 @@ export function useAddItemModal({ mealId, onClose }: IUseAddItemModalParams) {
         addedFoods,
         skippedFoodsCount,
         unidentifiedFoodsCount,
-      } = await addMealItems({ mealId, text: text.trim() });
+      } = await addMealItems(text.trim());
 
       setText('');
       onClose();

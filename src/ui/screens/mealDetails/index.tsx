@@ -1,20 +1,22 @@
 import { useGetMealById } from '@/app/hooks/queries/useGetMealById';
 import { AppStackScreenRouteProps } from '@/app/navigation/AppStack';
 import { Food } from '@/app/types/Food';
-import { isUnidentifiedKind, UnidentifiedKind } from '@/app/types/Meal';
+import { isUnidentifiedKind, MealStatus, UnidentifiedKind } from '@/app/types/Meal';
 import { AppText } from '@/ui/components/AppText';
 import { ButtonApp } from '@/ui/components/Button';
 import { Skeleton } from '@/ui/components/Skeleton';
 import { AddItemModal } from '@/ui/screens/mealDetails/components/AddItemModal';
+import { DeleteMealSheet } from '@/ui/screens/mealDetails/components/DeleteMealSheet';
 import { Header } from '@/ui/screens/mealDetails/components/Header';
 import { Macros } from '@/ui/screens/mealDetails/components/Macros';
 import { UnidentifiedHint } from '@/ui/screens/mealDetails/components/UnidentifiedHint';
 import { styles } from '@/ui/screens/mealDetails/styles';
+import { useMealItemActions } from '@/ui/screens/mealDetails/useMealItemActions';
 import { theme } from '@/ui/styles/theme';
 import { useFocusEffect } from '@react-navigation/native';
 import { StatusBar } from 'expo-status-bar';
 import * as SystemUI from 'expo-system-ui';
-import { PlusIcon } from 'lucide-react-native';
+import { PlusIcon, Trash2Icon } from 'lucide-react-native';
 import { useCallback, useMemo, useState } from 'react';
 import { FlatList, ListRenderItemInfo, Platform, View } from 'react-native';
 import { useSafeAreaInsets } from '@/ui/hooks/useSafeAreaInsets';
@@ -26,6 +28,17 @@ export function MealDetails({ route }: AppStackScreenRouteProps<'MealDetails'>) 
   const [addItemHint, setAddItemHint] = useState<UnidentifiedKind | null>(null);
 
   const { bottom } = useSafeAreaInsets();
+
+  const {
+    deleteMealSheetRef,
+    isDeletingMeal,
+    handleRemoveFood,
+    openDeleteMeal,
+    handleConfirmDeleteMeal,
+  } = useMealItemActions({ mealId, foodsCount: meal?.foods.length ?? 0 });
+
+  const canRemoveItems = meal?.canRemoveItems ?? false;
+  const canDeleteMeal = meal?.status === MealStatus.SUCCESS;
 
   const summary = useMemo(() => {
     if (!meal?.foods || meal.foods.length === 0) {
@@ -82,20 +95,32 @@ export function MealDetails({ route }: AppStackScreenRouteProps<'MealDetails'>) 
   );
 
   const foodKeyExtractor = useCallback(
-    (item: Food, index: number) => `${item.name}-${item.quantity}-${index}`,
+    (item: Food) => item.id,
     [],
   );
 
   const renderFoodItem = useCallback(
     ({ item }: ListRenderItemInfo<Food>) => (
-      <View style={styles.foodContainer}>
-        <AppText>{item.quantity}</AppText>
-        <AppText style={{ textTransform: 'capitalize' }}>
-          {item.name}
-        </AppText>
+      <View style={[styles.foodContainer, styles.foodRow]}>
+        <View style={styles.foodInfo}>
+          <AppText>{item.quantity}</AppText>
+          <AppText style={{ textTransform: 'capitalize' }}>
+            {item.name}
+          </AppText>
+        </View>
+        {canRemoveItems && (
+          <ButtonApp
+            size='icon'
+            intent='ghost'
+            accessibilityLabel={`Remover ${item.name}`}
+            onPress={() => handleRemoveFood(item)}
+          >
+            <Trash2Icon size={18} color={theme.colors.gray[700]} />
+          </ButtonApp>
+        )}
       </View>
     ),
-    [],
+    [canRemoveItems, handleRemoveFood],
   );
 
   const renderListEmpty = useCallback(
@@ -130,32 +155,44 @@ export function MealDetails({ route }: AppStackScreenRouteProps<'MealDetails'>) 
 
   const renderListFooter = useCallback(
     () => {
-      if (!canAddItems) {
+      if (!canAddItems && !canDeleteMeal) {
         return null;
       }
 
       return (
         <View style={styles.listFooter}>
-          {unidentified
-            ? (
-              <UnidentifiedHint
-                kind={unidentified}
-                onAddItem={() => openAddItemModal(unidentified)}
-              />
-            )
-            : (
-              <ButtonApp
-                intent='neutral'
-                leftIcon={<PlusIcon size={18} color={theme.colors.black[700]} />}
-                onPress={() => openAddItemModal(null)}
-              >
-                Adicionar item
-              </ButtonApp>
-            )}
+          {canAddItems && (
+            unidentified
+              ? (
+                <UnidentifiedHint
+                  kind={unidentified}
+                  onAddItem={() => openAddItemModal(unidentified)}
+                />
+              )
+              : (
+                <ButtonApp
+                  intent='neutral'
+                  leftIcon={<PlusIcon size={18} color={theme.colors.black[700]} />}
+                  onPress={() => openAddItemModal(null)}
+                >
+                  Adicionar item
+                </ButtonApp>
+              )
+          )}
+          {canDeleteMeal && (
+            <ButtonApp intent='ghost' onPress={openDeleteMeal}>
+              <View style={styles.deleteMealContent}>
+                <Trash2Icon size={18} color={theme.colors.support.red} />
+                <AppText weight='medium' color={theme.colors.support.red}>
+                  Excluir refeição
+                </AppText>
+              </View>
+            </ButtonApp>
+          )}
         </View>
       );
     },
-    [canAddItems, unidentified, openAddItemModal],
+    [canAddItems, canDeleteMeal, unidentified, openAddItemModal, openDeleteMeal],
   );
 
   return (
@@ -191,6 +228,11 @@ export function MealDetails({ route }: AppStackScreenRouteProps<'MealDetails'>) 
         hint={addItemHint}
         visible={isAddItemModalVisible}
         onClose={() => setIsAddItemModalVisible(false)}
+      />
+      <DeleteMealSheet
+        ref={deleteMealSheetRef}
+        isDeleting={isDeletingMeal}
+        onConfirm={handleConfirmDeleteMeal}
       />
     </>
   );

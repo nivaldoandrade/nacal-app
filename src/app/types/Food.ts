@@ -1,6 +1,8 @@
 import { ValueOf } from '@/app/utils/ValueOf';
 
 export type Food = {
+  id: string;
+  order: number;
   name: string;
   quantity: string;
   calories: number;

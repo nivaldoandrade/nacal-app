@@ -18,6 +18,7 @@ export const ErrorCode = {
   MEAL_NOT_EDITABLE: 'MEAL_NOT_EDITABLE',
   MEAL_ITEM_LIMIT_REACHED: 'MEAL_ITEM_LIMIT_REACHED',
   NO_FOOD_IDENTIFIED: 'NO_FOOD_IDENTIFIED',
+  MEAL_LAST_ITEM: 'MEAL_LAST_ITEM',
 
   // Billing
   FREE_QUOTA_EXCEEDED: 'FREE_QUOTA_EXCEEDED',
@@ -54,6 +55,7 @@ export const ApiErrorMessages: Record<ErrorCode, string> = {
   MEAL_NOT_EDITABLE: 'Essa refeição não pode mais receber itens.',
   MEAL_ITEM_LIMIT_REACHED: 'Essa refeição já recebeu o máximo de itens adicionados.',
   NO_FOOD_IDENTIFIED: 'Não encontrei nenhum alimento nesse texto. Tente descrever de outro jeito.',
+  MEAL_LAST_ITEM: 'A refeição precisa ter pelo menos um item.',
   FREE_QUOTA_EXCEEDED: 'Você atingiu o limite de refeições do plano Free deste mês. Assine o Pro para continuar sem limites.',
   TRIAL_NOT_AVAILABLE: 'O teste grátis ainda não está disponível para esta conta. Escolha um plano para assinar.',
   BILLING_ERROR: 'Não conseguimos falar com o serviço de pagamento agora. Tente novamente em instantes.',

@@ -26,8 +26,27 @@ export const styles = StyleSheet.create({
     gap: 4,
   },
 
+  foodRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    paddingRight: 0,
+  },
+
+  foodInfo: {
+    flex: 1,
+    gap: 4,
+  },
+
   listFooter: {
     marginHorizontal: 20,
     marginTop: 24,
+    gap: 8,
+  },
+
+  deleteMealContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
   },
 });

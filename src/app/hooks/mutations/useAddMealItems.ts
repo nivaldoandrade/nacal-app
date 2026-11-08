@@ -1,19 +1,18 @@
+import {
+  getMealItemsMutationKey,
+  syncMealAfterItemsMutation,
+} from '@/app/hooks/mutations/mealItemsCache';
 import { MealsService } from '@/app/services/MealsService';
-import { MealItem } from '@/app/types/Meal';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 
-export function useAddMealItems() {
+export function useAddMealItems(mealId: string) {
   const queryClient = useQueryClient();
 
   const { isPending, mutateAsync } = useMutation({
-    mutationFn: (params: MealsService.AddItems['params']) => MealsService.addItems(params),
-    onSuccess: ({ meal }) => {
-      queryClient.setQueryData<MealItem>(['meal', meal.id], meal);
-      queryClient.invalidateQueries({ queryKey: ['meals'] });
-    },
-    onError: (_error, { mealId }) => {
-      queryClient.invalidateQueries({ queryKey: ['meal', mealId] });
-    },
+    mutationKey: getMealItemsMutationKey(mealId),
+    mutationFn: (text: string) => MealsService.addItems({ mealId, text }),
+    onSuccess: ({ meal }) => syncMealAfterItemsMutation(queryClient, mealId, meal),
+    onError: () => syncMealAfterItemsMutation(queryClient, mealId, undefined),
   });
 
   return {

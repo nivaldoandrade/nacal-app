@@ -47,7 +47,7 @@ export function ButtonApp({
           }),
         },
       ]}
-      disabled={disabled}
+      disabled={disabled || isLoading}
       {...props}
     >
       {isLoading

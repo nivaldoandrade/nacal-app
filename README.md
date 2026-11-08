@@ -32,6 +32,7 @@ Este repositório contém o **app frontend** (web + iOS + Android). O backend é
 - **Rejeição amigável**: Fotos sem comida, áudios sem fala e arquivos inválidos viram `REJECTED`, com toast explicativo, reset da captura e atualização da cota;
 - **Detalhes da refeição**: Total de calorias e quebra de macros por alimento e da refeição;
 - **Adicionar item por texto**: Na tela de detalhes, o botão "Adicionar item" abre um modal para completar a refeição com um texto curto ("um copo de coca 350ml"); a IA identifica só os itens novos, que entram na lista e atualizam os totais. Disponível nas primeiras 24h, até 5 vezes por refeição;
+- **Remover item e excluir refeição**: Na tela de detalhes, cada item tem um ícone de lixeira que remove na hora, com toast "Desfazer"; no fim da lista, "Excluir refeição" pede confirmação num bottom sheet. Remover o único item leva à mesma confirmação;
 - **Aviso do que não foi identificado**: Quando a IA vê algo na foto que não consegue identificar (copo opaco, embalagem fechada, recipiente tampado), um card discreto ("Tinha algo no copo?") aparece no lugar do botão "Adicionar item" e abre o mesmo modal com texto adaptado;
 - **Metas editáveis**: Override manual do plano derivado (calorias, proteínas, carboidratos e gorduras);
 - **Perfil editável**: Nome, data de nascimento, altura, peso e gênero;
@@ -58,7 +59,7 @@ Este repositório contém o **app frontend** (web + iOS + Android). O backend é
 | Tela          | Descrição                                                                               |
 | ------------- | --------------------------------------------------------------------------------------- |
 | `Home`        | Calendário semanal, MacroRainbow, refeições do dia, FAB de criação e pull-to-refresh    |
-| `MealDetails` | Detalhes da refeição: status de processamento, calorias e macros (por alimento e total) e "Adicionar item" (`AddItemModal`) |
+| `MealDetails` | Detalhes da refeição: status de processamento, calorias e macros (por alimento e total), "Adicionar item" (`AddItemModal`), remover item e excluir refeição (`DeleteMealSheet`) |
 | `EditGoals`   | Edição manual das metas diárias de calorias e macros                                    |
 | `Profile`     | Edição do perfil e acesso às metas                                                      |
 | `Plans`       | Planos Free vs Pro, trial, cota mensal, checkout (Asaas) e cancelamento                 |
@@ -137,10 +138,19 @@ Tela (src/ui)
 
 1. Em `MealDetails`, o botão "Adicionar item" aparece no fim da lista só quando `GET /meals/{id}` devolve `canAddItems: true` (refeição `SUCCESS`, nas primeiras 24h e abaixo dos limites);
 2. O `AddItemModal` recebe o texto (até 300 caracteres, via `LimitedTextInput`) e `useAddMealItems` chama `MealsService.addItems` → `POST /meals/{id}/items` (síncrono, sem polling);
-3. No sucesso, a resposta substitui a query `['meal', id]`, as queries `['meals', ...]` da home são invalidadas, o modal fecha e um toast confirma; se a API descartou itens por falta de vaga (`skippedFoodsCount > 0`) ou porque o texto não dizia qual alimento era (`unidentifiedFoodsCount > 0`, ex.: "alguma coisa no pote"), o toast avisa e sugere descrever com mais detalhes;
+3. No sucesso, a resposta substitui a query `['meal', id]`, que é buscada de novo (leitura consistente) e copia os itens para a refeição nas listas `['meals', ...]` da home, sem refetch da listagem (ver "Fluxo de remover item"). Depois o modal fecha e um toast confirma; se a API descartou itens por falta de vaga (`skippedFoodsCount > 0`) ou porque o texto não dizia qual alimento era (`unidentifiedFoodsCount > 0`, ex.: "alguma coisa no pote"), o toast avisa e sugere descrever com mais detalhes;
 4. `NO_FOOD_IDENTIFIED` e `RATE_LIMIT_EXCEEDED` mostram um toast dentro do modal, que continua aberto; `MEAL_NOT_EDITABLE`, `MEAL_ITEM_LIMIT_REACHED`, `FREE_QUOTA_EXCEEDED` e `RESOURCE_NOT_FOUND` fecham o modal com toast. Em qualquer erro, `['meal', id]` é invalidada para atualizar `canAddItems`;
 5. Adicionar item não consome cota, mas é bloqueado para Free sem cota restante.
 6. Se `GET /meals/{id}` devolver `unidentified` (`DRINK`, `PACKAGED`, `COVERED` ou `OTHER`), o card `UnidentifiedHint` substitui o botão; o `AddItemModal` recebe a categoria (`hint`) e troca título, subtítulo e placeholder (cópia em `UnidentifiedHint/copy.ts`). A API zera `unidentified` depois da primeira adição, então o botão normal volta. Uma categoria que o app não conhece (API publicada antes do app) é ignorada por `isUnidentifiedKind`, e a tela mostra o botão normal.
+
+### Fluxo de remover item e excluir refeição
+
+1. Em `MealDetails`, cada item mostra um ícone de lixeira quando `GET /meals/{id}` devolve `canRemoveItems: true` (refeição `SUCCESS`, sem janela de tempo). A `key` da lista é o `id` do item;
+2. Remover é otimista: `useRemoveMealItem` tira o item de `['meal', id]` e da refeição nas listas `['meals', ...]` antes de chamar `DELETE /meals/{id}/items/{itemId}`, e um toast "Item removido." com a ação "Desfazer" fica 5s na tela. Se a chamada falhar, o toast some e um toast de erro aparece (`MEAL_LAST_ITEM`, `MEAL_NOT_EDITABLE` e `RATE_LIMIT_EXCEEDED` têm cópia própria);
+3. "Desfazer" espera a remoção terminar e chama `POST /meals/{id}/items/{itemId}/restore` (`useRestoreMealItem`), também otimista: o item volta na posição pela `order`. Se a remoção falhou, não há o que desfazer;
+4. Remover, restaurar e adicionar item compartilham a `mutationKey` `['meal-items', mealId]` (`mealItemsCache.ts`). Só a última a terminar sincroniza: grava a resposta, busca `['meal', id]` de novo (a API lê com consistência forte) e copia os itens para as listas da home. A listagem não é buscada de novo porque o índice dela na API é eventualmente consistente e poderia trazer o item de volta;
+5. No único item, a lixeira abre o `DeleteMealSheet` com texto próprio ("Esse é o único item da refeição…"), porque a API não deixa a refeição vazia;
+6. "Excluir refeição" (no rodapé, só em refeições `SUCCESS`) abre o `DeleteMealSheet` (bottom sheet com "Manter" e "Sim, excluir"). `useDeleteMeal` chama `DELETE /meals/{id}` (`404` conta como sucesso), tira a refeição das listas `['meals', ...]`, fecha os toasts de "Desfazer" pendentes, volta para a tela anterior e mostra "Refeição excluída."; a query `['meal', id]` é removida quando a tela desmonta. Não há "Desfazer", e a cota do mês não é estornada.
 
 ### Fluxo de cadastro por e-mail
 

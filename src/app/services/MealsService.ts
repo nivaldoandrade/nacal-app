@@ -49,6 +49,41 @@ export class MealsService extends Service {
     };
   }
 
+  static async deleteMeal(mealId: string): Promise<void> {
+    await this.client.delete(`meals/${mealId}`);
+  }
+
+  static async removeItem(
+    params: MealsService.MealItemAction['params'],
+  ): Promise<MealsService.MealItemAction['response']> {
+    const { data } = await this.client.delete<MealsService.MealItemAction['rawResponse']>(
+      `meals/${params.mealId}/items/${params.itemId}`,
+    );
+
+    return MealsService.toMealItemActionResponse(data);
+  }
+
+  static async restoreItem(
+    params: MealsService.MealItemAction['params'],
+  ): Promise<MealsService.MealItemAction['response']> {
+    const { data } = await this.client.post<MealsService.MealItemAction['rawResponse']>(
+      `meals/${params.mealId}/items/${params.itemId}/restore`,
+    );
+
+    return MealsService.toMealItemActionResponse(data);
+  }
+
+  private static toMealItemActionResponse(
+    data: MealsService.MealItemAction['rawResponse'],
+  ): MealsService.MealItemAction['response'] {
+    return {
+      meal: {
+        ...data.meal,
+        createdAt: new Date(data.meal.createdAt),
+      },
+    };
+  }
+
   static async createFromText(
     params: MealsService.CreateFromText['params'],
   ): Promise<MealsService.CreateFromText['response']> {
@@ -152,6 +187,21 @@ export namespace MealsService {
   }
 
   export type GetByIdResponse = MealItem;
+
+  export type MealItemAction = {
+    params: {
+      mealId: string;
+      itemId: string;
+    };
+
+    rawResponse: {
+      meal: Omit<MealItem, 'createdAt'> & { createdAt: string };
+    };
+
+    response: {
+      meal: MealItem;
+    };
+  }
 
   export type AddItems = {
     params: {
