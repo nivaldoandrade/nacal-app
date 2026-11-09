@@ -157,6 +157,13 @@ export function useAudioModal({ visible, onRequestClose }: IUseAudioModalParams)
 
       const code = getApiErrorCode(error);
 
+      if (code === ErrorCode.DAILY_MEAL_LIMIT_REACHED) {
+        onRequestClose('fade');
+        toast.info(getErrorMessage(code));
+        queryClient.invalidateQueries({ queryKey: ['accounts'] });
+        return;
+      }
+
       if (code === ErrorCode.FREE_QUOTA_EXCEEDED) {
         onRequestClose('fade');
         toast.error(getErrorMessage(code));

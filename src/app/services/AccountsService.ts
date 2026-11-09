@@ -24,6 +24,7 @@ export class AccountsService extends Service {
       : null;
 
     const mealQuota = data.mealQuota;
+    const dailyMealQuota = data.dailyMealQuota ?? null;
 
     if (!data.isOnboarded || !data.profile || !data.goal) {
       return {
@@ -32,6 +33,7 @@ export class AccountsService extends Service {
         goal: null,
         subscription,
         mealQuota,
+        dailyMealQuota,
       };
     }
 
@@ -44,6 +46,7 @@ export class AccountsService extends Service {
       goal: data.goal,
       subscription,
       mealQuota,
+      dailyMealQuota,
     };
   }
 
@@ -93,6 +96,7 @@ export namespace AccountsService {
       paidUntil?: string;
     } | null;
     mealQuota: MealQuota;
+    dailyMealQuota?: MealQuota | null;
   };
 
   export type Me =
@@ -102,6 +106,7 @@ export namespace AccountsService {
         goal: null;
         subscription: Subscription | null;
         mealQuota: MealQuota;
+        dailyMealQuota: MealQuota | null;
       }
     | {
         isOnboarded: true;
@@ -111,6 +116,7 @@ export namespace AccountsService {
         goal: NonNullable<MeResponse['goal']>;
         subscription: Subscription | null;
         mealQuota: MealQuota;
+        dailyMealQuota: MealQuota | null;
       };
 
   export type UpdateProfileParams = {

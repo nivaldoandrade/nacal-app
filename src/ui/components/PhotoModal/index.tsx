@@ -2,7 +2,7 @@ import { AppText } from '@/ui/components/AppText';
 import { ButtonApp } from '@/ui/components/Button';
 import { CreateMealLoader } from '@/ui/components/CreateMealLoader';
 import type { CreateMealModalAnimationType } from '@/ui/components/CreateMealModals';
-import { FreeQuotaNotice } from '@/ui/components/FreeQuotaNotice';
+import { MealQuotaNotice } from '@/ui/components/MealQuotaNotice';
 import { ModalContent, ModalFooter, ModalHeader, ModalWrapper } from '@/ui/components/ModalWrapper';
 import { CameraCapture } from '@/ui/components/PhotoModal/components/CameraCapture/CameraCapture';
 import { PhotoDescriptionInput } from '@/ui/components/PhotoModal/components/PhotoDescriptionInput';
@@ -146,7 +146,7 @@ export function PhotoModal({
                 onSend={handleSend}
               />
             )}
-            <FreeQuotaNotice variant='dark' />
+            <MealQuotaNotice variant='dark' />
           </ModalFooter>
         </KeyboardAvoidingView>
       </TouchableWithoutFeedback>

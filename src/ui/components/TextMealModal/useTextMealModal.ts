@@ -73,6 +73,12 @@ export function useTextMealModal({ onRequestClose }: IUseTextMealModalParams) {
 
       const code = getApiErrorCode(error);
 
+      if (code === ErrorCode.DAILY_MEAL_LIMIT_REACHED) {
+        onRequestClose('fade');
+        toast.info(getErrorMessage(code));
+        return;
+      }
+
       if (code === ErrorCode.FREE_QUOTA_EXCEEDED) {
         onRequestClose('fade');
         toast.error(getErrorMessage(code));

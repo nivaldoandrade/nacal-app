@@ -15,11 +15,13 @@ export function useAccount({ enabled = true }: IUseAccountParams = {}) {
 
   const subscription = data?.subscription ?? null;
   const mealQuota = data?.mealQuota ?? null;
+  const dailyMealQuota = data?.dailyMealQuota ?? null;
 
   return {
     account: data?.isOnboarded ? data : null,
     subscription,
     mealQuota,
+    dailyMealQuota,
     plan: subscription?.plan ?? 'FREE',
     isPro: (subscription?.plan ?? 'FREE') === 'PRO',
     trialEndsAt: subscription?.trialEndsAt ?? null,

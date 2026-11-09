@@ -5,7 +5,7 @@ import { theme } from '@/ui/styles/theme';
 import { useNavigation } from '@react-navigation/native';
 import { Pressable } from 'react-native';
 
-type FreeQuotaNoticeVariant = 'light' | 'dark';
+type MealQuotaNoticeVariant = 'light' | 'dark';
 
 const COLORS = {
   light: {
@@ -18,18 +18,24 @@ const COLORS = {
   },
 } as const;
 
-interface IFreeQuotaNoticeProps {
-  variant?: FreeQuotaNoticeVariant;
+interface IMealQuotaNoticeProps {
+  variant?: MealQuotaNoticeVariant;
 }
 
-export function FreeQuotaNotice({ variant = 'light' }: IFreeQuotaNoticeProps) {
-  const { isPro, mealQuota } = useAccount();
+const PRO_DAILY_NOTICE_THRESHOLD = 5;
+
+export function MealQuotaNotice({ variant = 'light' }: IMealQuotaNoticeProps) {
+  const { isPro, mealQuota, dailyMealQuota } = useAccount();
   const { navigate } = useNavigation<AppStackNavigatorProps>();
+
+  if (isPro) {
+    return <ProDailyNotice variant={variant} remaining={dailyMealQuota?.remaining ?? null} />;
+  }
 
   const limit = mealQuota?.limit ?? null;
   const remaining = mealQuota?.remaining ?? null;
 
-  if (isPro || limit === null || remaining === null) {
+  if (limit === null || remaining === null) {
     return null;
   }
 
@@ -68,5 +74,30 @@ export function FreeQuotaNotice({ variant = 'light' }: IFreeQuotaNoticeProps) {
         </AppText>
       )}
     </Pressable>
+  );
+}
+
+interface IProDailyNoticeProps {
+  variant: MealQuotaNoticeVariant;
+  remaining: number | null;
+}
+
+function ProDailyNotice({ variant, remaining }: IProDailyNoticeProps) {
+  if (remaining === null || remaining > PRO_DAILY_NOTICE_THRESHOLD) {
+    return null;
+  }
+
+  if (remaining <= 0) {
+    return (
+      <AppText size='xs' color={theme.colors.support.red} style={{ textAlign: 'center' }}>
+        Você chegou ao limite de hoje. Amanhã tem mais!
+      </AppText>
+    );
+  }
+
+  return (
+    <AppText size='xs' weight='medium' color={COLORS[variant].normal} style={{ textAlign: 'center' }}>
+      {remaining === 1 ? 'Resta 1 refeição hoje' : `Restam ${remaining} refeições hoje`}
+    </AppText>
   );
 }

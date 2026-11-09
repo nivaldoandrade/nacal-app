@@ -52,7 +52,7 @@ export function PlanOfferModal({ visible, onRequestClose }: IPlanOfferModalProps
                   <Text style={styles.titleHighlight}>continuar</Text>
                 </AppText>
                 <AppText color={theme.colors.gray[600]} style={styles.subtitle}>
-                  Comece gratuitamente ou experimente o Pro com refeições ilimitadas.
+                  Comece gratuitamente ou experimente o Pro com até 20 refeições AI por dia.
                 </AppText>
               </View>
 

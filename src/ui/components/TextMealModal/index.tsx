@@ -2,7 +2,7 @@ import { AppText } from '@/ui/components/AppText';
 import { ButtonApp } from '@/ui/components/Button';
 import { CreateMealLoader } from '@/ui/components/CreateMealLoader';
 import type { CreateMealModalAnimationType } from '@/ui/components/CreateMealModals';
-import { FreeQuotaNotice } from '@/ui/components/FreeQuotaNotice';
+import { MealQuotaNotice } from '@/ui/components/MealQuotaNotice';
 import { LimitedTextInput } from '@/ui/components/LimitedTextInput';
 import { ModalContent, ModalFooter, ModalHeader, ModalWrapper } from '@/ui/components/ModalWrapper';
 import { styles } from '@/ui/components/TextMealModal/styles';
@@ -78,7 +78,7 @@ export function TextMealModal({
             <ButtonApp onPress={handleSubmit} disabled={!canSubmit}>
               Registrar
             </ButtonApp>
-            <FreeQuotaNotice variant='dark' />
+            <MealQuotaNotice variant='dark' />
           </ModalFooter>
         </KeyboardAvoidingView>
       </TouchableWithoutFeedback>

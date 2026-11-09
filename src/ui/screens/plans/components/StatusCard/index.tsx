@@ -59,7 +59,7 @@ export function StatusCard({
         </View>
         {isQuotaFull && (
           <AppText size='xs' color={theme.colors.support.red}>
-            Limite do Free atingido neste mês. Assine o Pro para seguir sem limites.
+            Limite do Free atingido neste mês. Assine o Pro para registrar até 20 refeições por dia.
           </AppText>
         )}
       </View>
@@ -78,7 +78,7 @@ export function StatusCard({
               <AppText weight='semiBold'>Plano Free</AppText>
             </View>
             <AppText size='sm' color={theme.colors.gray[700]}>
-              Você tem {limit} refeições AI por mês. Comece um teste grátis ou assine o Pro para desbloquear o ilimitado.
+              Você tem {limit} refeições AI por mês. Comece um teste grátis ou assine o Pro para registrar até 20 refeições por dia.
             </AppText>
             {renderQuota()}
           </>
@@ -120,7 +120,9 @@ export function StatusCard({
               <AppText weight='semiBold'>Seu teste grátis terminou</AppText>
             </View>
             <AppText size='sm' color={theme.colors.gray[700]}>
-              Você está no Free, com {limit} refeições AI por mês. Assine o Pro para continuar sem limites.
+              {isQuotaFull
+                ? `Você está no Free e já usou as ${limit} refeições grátis deste mês. Assine o Pro para registrar até 20 refeições por dia.`
+                : `Você está no Free e ainda tem ${quota?.remaining ?? limit} de ${limit} refeições grátis este mês. Assine o Pro para registrar até 20 refeições por dia.`}
             </AppText>
             {renderQuota()}
           </>

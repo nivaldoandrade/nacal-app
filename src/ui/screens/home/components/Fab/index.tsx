@@ -3,7 +3,7 @@ import { AppText } from '@/ui/components/AppText';
 import { ButtonApp } from '@/ui/components/Button';
 import type { CreateMealModalType } from '@/ui/components/CreateMealModals';
 import { CreateMealOptions } from '@/ui/components/CreateMealOptions';
-import { FreeQuotaNotice } from '@/ui/components/FreeQuotaNotice';
+import { MealQuotaNotice } from '@/ui/components/MealQuotaNotice';
 import { styles } from '@/ui/screens/home/components/Fab/styles';
 import { useHomeContext } from '@/ui/screens/home/context/useHomeContext';
 import { BottomSheetModal, BottomSheetView } from '@gorhom/bottom-sheet';
@@ -15,17 +15,16 @@ import { useSafeAreaInsets } from '@/ui/hooks/useSafeAreaInsets';
 
 export function Fab() {
   const { onOpenCreateMealModal } = useHomeContext();
-  const { loadAccount, mealQuota } = useAccount();
+  const { loadAccount, mealQuota, dailyMealQuota } = useAccount();
   const navigation = useNavigation();
 
   const { bottom } = useSafeAreaInsets();
   const bottomSheetModalRef = useRef<BottomSheetModal>(null);
   const sheetIndexRef = useRef(-1);
 
-  const isQuotaExhausted =
-    mealQuota !== null &&
-    mealQuota.remaining !== null &&
-    mealQuota.remaining <= 0;
+  const isQuotaExhausted = [mealQuota, dailyMealQuota].some(
+    (quota) => quota !== null && quota.remaining !== null && quota.remaining <= 0,
+  );
 
   const handleSheetChange = useCallback((index: number) => {
     sheetIndexRef.current = index;
@@ -81,7 +80,7 @@ export function Fab() {
             Cadastre sua refeição
           </AppText>
           <CreateMealOptions disabled={isQuotaExhausted} onSelect={handleSelectCreateMealOption} />
-          <FreeQuotaNotice />
+          <MealQuotaNotice />
         </BottomSheetView>
       </BottomSheetModal>
     </>

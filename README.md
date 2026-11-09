@@ -36,7 +36,7 @@ Este repositório contém o **app frontend** (web + iOS + Android). O backend é
 - **Aviso do que não foi identificado**: Quando a IA vê algo na foto que não consegue identificar (copo opaco, embalagem fechada, recipiente tampado), um card discreto ("Tinha algo no copo?") aparece no lugar do botão "Adicionar item" e abre o mesmo modal com texto adaptado;
 - **Metas editáveis**: Override manual do plano derivado (calorias, proteínas, carboidratos e gorduras);
 - **Perfil editável**: Nome, data de nascimento, altura, peso e gênero;
-- **Planos e assinatura**: Free com **20 refeições AI/mês** e Pro (**R$ 9,99/mês** ou **R$ 99,90/ano**) ilimitado; **trial de 7 dias grátis** sem cartão (1 por conta), checkout via Asaas, cancelamento na tela de Planos e ativação via webhook refletida em `GET /me`;
+- **Planos e assinatura**: Free com **20 refeições AI/mês** e Pro (**R$ 9,99/mês** ou **R$ 89,90/ano**) com **até 20 refeições AI por dia** (uso justo); **trial de 7 dias grátis** sem cartão (1 por conta), checkout via Asaas, cancelamento na tela de Planos e ativação via webhook refletida em `GET /me`;
 - **Web + PWA**: Export estático instalável com ícones, manifest e splash, além dos builds nativos iOS e Android;
 - **Paridade web/nativo**: branching por `Platform.OS` para date picker, vídeo, toasts, handling de arquivos e animações;
 - **Toasts**: `sonner` na web e `sonner-native` no nativo, com import centralizado em `@/app/libs/sonner`.
@@ -131,7 +131,7 @@ Tela (src/ui)
 1. No FAB da home, a opção **Texto** abre o `TextMealModal` (mesmo layout do `AddItemModal`, com `LimitedTextInput` de até 500 caracteres e o aviso de cota);
 2. Ao tocar em "Registrar", `useCreateTextMeal` chama `MealsService.createFromText` → `POST /meals/text` com o `timeZone` do dispositivo (`getDeviceTimeZone`, compartilhado com `useCreateMeal`). A chamada é síncrona, com timeout de 35s no axios (o API Gateway corta em 30s, então o modal nunca fica preso no loader); o `CreateMealLoader` cobre o modal enquanto ela roda e fechar o modal fica bloqueado nesse intervalo;
 3. No sucesso, a resposta já traz a refeição: o app grava `['meal', id]` no cache, insere a refeição direto na lista `['meals', dia]` (sem refetch, porque o índice da listagem na API é eventualmente consistente e poderia voltar sem ela), invalida `['accounts']`, navega para `MealDetails` e fecha o modal (sem polling). Se a API descartou menções que não diziam o que era (`unidentifiedFoodsCount > 0`), um toast avisa e, quando a refeição ainda aceita itens (`canAddItems`), sugere completar em "Adicionar item";
-4. `NO_FOOD_IDENTIFIED` e `RATE_LIMIT_EXCEEDED` mostram um toast dentro do modal e mantêm o texto para editar; `FREE_QUOTA_EXCEEDED` fecha o modal e leva para `Plans`; outros erros mostram um toast de erro e também mantêm o texto. Em qualquer erro, `['meals', hoje]` e `['accounts']` são invalidadas: se a API gravou a refeição mas a resposta se perdeu (rede, app em segundo plano), ela aparece na home e o usuário não reenvia o texto sem saber;
+4. `NO_FOOD_IDENTIFIED` e `RATE_LIMIT_EXCEEDED` mostram um toast dentro do modal e mantêm o texto para editar; `FREE_QUOTA_EXCEEDED` fecha o modal e leva para `Plans`; `DAILY_MEAL_LIMIT_REACHED` (Pro com 20 refeições no dia) fecha o modal com toast, sem levar para `Plans`; outros erros mostram um toast de erro e também mantêm o texto. Em qualquer erro, `['meals', hoje]` e `['accounts']` são invalidadas: se a API gravou a refeição mas a resposta se perdeu (rede, app em segundo plano), ela aparece na home e o usuário não reenvia o texto sem saber;
 5. Texto sem nenhum alimento não consome cota; o horário da refeição é o do envio, e "no almoço comi…" só muda o nome e o ícone.
 
 ### Fluxo de adicionar item
@@ -140,7 +140,7 @@ Tela (src/ui)
 2. O `AddItemModal` recebe o texto (até 300 caracteres, via `LimitedTextInput`) e `useAddMealItems` chama `MealsService.addItems` → `POST /meals/{id}/items` (síncrono, sem polling);
 3. No sucesso, a resposta substitui a query `['meal', id]`, que é buscada de novo (leitura consistente) e copia os itens para a refeição nas listas `['meals', ...]` da home, sem refetch da listagem (ver "Fluxo de remover item"). Depois o modal fecha e um toast confirma; se a API descartou itens por falta de vaga (`skippedFoodsCount > 0`) ou porque o texto não dizia qual alimento era (`unidentifiedFoodsCount > 0`, ex.: "alguma coisa no pote"), o toast avisa e sugere descrever com mais detalhes;
 4. `NO_FOOD_IDENTIFIED` e `RATE_LIMIT_EXCEEDED` mostram um toast dentro do modal, que continua aberto; `MEAL_NOT_EDITABLE`, `MEAL_ITEM_LIMIT_REACHED`, `FREE_QUOTA_EXCEEDED` e `RESOURCE_NOT_FOUND` fecham o modal com toast. Em qualquer erro, `['meal', id]` é invalidada para atualizar `canAddItems`;
-5. Adicionar item não consome cota, mas é bloqueado para Free sem cota restante.
+5. Adicionar item não consome cota, mas é bloqueado para Free sem cota restante; o limite diário do Pro não bloqueia.
 6. Se `GET /meals/{id}` devolver `unidentified` (`DRINK`, `PACKAGED`, `COVERED` ou `OTHER`), o card `UnidentifiedHint` substitui o botão; o `AddItemModal` recebe a categoria (`hint`) e troca título, subtítulo e placeholder (cópia em `UnidentifiedHint/copy.ts`). A API zera `unidentified` depois da primeira adição, então o botão normal volta. Uma categoria que o app não conhece (API publicada antes do app) é ignorada por `isUnidentifiedKind`, e a tela mostra o botão normal.
 
 ### Fluxo de remover item e excluir refeição
@@ -170,11 +170,12 @@ A tela `Plans` consome a API de billing (gateway Asaas). O webhook é exclusivo 
 | `POST /billing/trial` | JWT | Trial de 7 dias (1 por conta) → `{ trialEndsAt }`                                |
 | `POST /billing/checkout` | JWT | Cria o checkout Asaas → `{ checkoutUrl, expiresAt }`                          |
 | `POST /billing/cancel` | JWT | Cancela trial (local) ou assinatura (gateway)                                   |
-| `GET /me`            | JWT  | Reflete `subscription` (plan, status, trialEndsAt, paidUntil) + `mealQuota`       |
+| `GET /me`            | JWT  | Reflete `subscription` (plan, status, trialEndsAt, paidUntil) + `mealQuota` (mês) e `dailyMealQuota` (dia, só Pro) |
 
 - **Web**: redirect na mesma aba — flag `nacal:checkout:pending` no `sessionStorage`, retorno em `/billing/return`, confirmação automática no `/me` (botão "Já paguei" como retry manual);
 - **Native**: `WebBrowser.openAuthSessionAsync` + loop de confirmação no `/me`;
-- **Cota FREE**: estourou a 21ª refeição do mês → `403 FREE_QUOTA_EXCEEDED` → toast + navegação para `Plans`;
+- **Cota FREE**: estourou a 21ª refeição do mês → `403 FREE_QUOTA_EXCEEDED` → toast + navegação para `Plans`. A API conta só as refeições feitas no Free: quem volta do trial ou do Pro pago no meio do mês tem as 20 menos o que já usou no Free naquele mês;
+- **Limite diário do Pro** (trial incluído): 20 refeições por dia, com o dia em `America/Sao_Paulo` → `429 DAILY_MEAL_LIMIT_REACHED` → foto, áudio e texto fecham o modal com toast ("Você chegou ao limite de 20 refeições de hoje…") e invalidam `['accounts']`. O `MealQuotaNotice` (no FAB e nos modais de foto, áudio e texto) mostra a cota do mês no Free e, no Pro, só aparece quando restam 5 refeições ou menos no dia; com a cota do dia ou do mês esgotada, o FAB desativa as opções de criação;
 - `POST /billing/webhooks/asaas` (público) roda só na API e é a fonte da verdade da ativação.
 
 ## Pré-requisitos
