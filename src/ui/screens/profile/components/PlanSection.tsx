@@ -47,6 +47,10 @@ export function PlanSection() {
       return 'Trial — termina hoje';
     }
 
+    if (subscription.status === 'ACTIVE' && subscription.planId === 'PRO_YEARLY') {
+      return `Acesso até: ${formatShortDate(subscription.paidUntil)}`;
+    }
+
     if (subscription.status === 'ACTIVE') {
       return `Próxima cobrança: ${formatShortDate(subscription.paidUntil)}`;
     }

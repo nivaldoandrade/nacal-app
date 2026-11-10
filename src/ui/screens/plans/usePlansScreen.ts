@@ -88,7 +88,8 @@ export function usePlansScreen() {
   const canStartTrial = !subscription;
   const showCycleSelector = status !== 'ACTIVE';
   const showConfirmPanel = isConfirming || awaitingPayment;
-  const showCancelAction = status === 'ACTIVE' || status === 'TRIAL';
+  const isYearlyActive = status === 'ACTIVE' && subscription?.planId === 'PRO_YEARLY';
+  const showCancelAction = status === 'TRIAL' || (status === 'ACTIVE' && !isYearlyActive);
 
   const checkoutLabel = (() => {
     const value = selectedPlan ? formatPrice(selectedPlan.price) : '';

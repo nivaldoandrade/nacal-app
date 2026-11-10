@@ -138,7 +138,9 @@ export function StatusCard({
               <AppText weight='semiBold'>{currentPlanName ?? 'Pro'}</AppText>
             </View>
             <View style={styles.infoRow}>
-              <AppText size='sm' color={theme.colors.gray[700]}>Próxima cobrança</AppText>
+              <AppText size='sm' color={theme.colors.gray[700]}>
+                {subscription?.planId === 'PRO_YEARLY' ? 'Acesso até' : 'Próxima cobrança'}
+              </AppText>
               <AppText size='sm' weight='medium'>{formatShortDate(subscription?.paidUntil)}</AppText>
             </View>
             <View style={styles.infoRow}>

@@ -36,7 +36,7 @@ Este repositório contém o **app frontend** (web + iOS + Android). O backend é
 - **Aviso do que não foi identificado**: Quando a IA vê algo na foto que não consegue identificar (copo opaco, embalagem fechada, recipiente tampado), um card discreto ("Tinha algo no copo?") aparece no lugar do botão "Adicionar item" e abre o mesmo modal com texto adaptado;
 - **Metas editáveis**: Override manual do plano derivado (calorias, proteínas, carboidratos e gorduras);
 - **Perfil editável**: Nome, data de nascimento, altura, peso e gênero;
-- **Planos e assinatura**: Free com **20 refeições AI/mês** e Pro (**R$ 9,99/mês** ou **R$ 89,90/ano**) com **até 20 refeições AI por dia** (uso justo); **trial de 7 dias grátis** sem cartão (1 por conta), checkout via Asaas, cancelamento na tela de Planos e ativação via webhook refletida em `GET /me`;
+- **Planos e assinatura**: Free com **20 refeições AI/mês** e Pro (**R$ 9,99/mês** ou **R$ 89,90/ano**) com **até 20 refeições AI por dia** (uso justo); **trial de 7 dias grátis** sem cartão (1 por conta), checkout via Asaas, cancelamento na tela de Planos (trial e mensal; o anual é pagamento único, sem renovação, então mostra "Acesso até" e não tem botão de cancelar) e ativação via webhook refletida em `GET /me`;
 - **Web + PWA**: Export estático instalável com ícones, manifest e splash, além dos builds nativos iOS e Android;
 - **Paridade web/nativo**: branching por `Platform.OS` para date picker, vídeo, toasts, handling de arquivos e animações;
 - **Toasts**: `sonner` na web e `sonner-native` no nativo, com import centralizado em `@/app/libs/sonner`.
