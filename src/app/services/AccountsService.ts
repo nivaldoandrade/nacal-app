@@ -18,7 +18,7 @@ export class AccountsService extends Service {
           ? new Date(data.subscription.trialEndsAt)
           : null,
         paidUntil: data.subscription.paidUntil
-          ? new Date(data.subscription.paidUntil)
+          ? this.parseDateFromAPI(data.subscription.paidUntil)
           : null,
       }
       : null;
