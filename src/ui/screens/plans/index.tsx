@@ -28,6 +28,8 @@ export function Plans() {
     setSelectedPlanId,
     canStartTrial,
     showCycleSelector,
+    showCheckoutAction,
+    yearlyExpiry,
     showConfirmPanel,
     showCancelAction,
     showCancelConfirm,
@@ -76,6 +78,7 @@ export function Plans() {
           currentPlanName={currentPlan?.name ?? null}
           currentPlanPrice={currentPlan?.price ?? null}
           trialDaysLeft={trialDaysLeft}
+          yearlyExpiry={yearlyExpiry}
         />
 
         {showConfirmPanel ? (
@@ -163,7 +166,7 @@ export function Plans() {
                 </ButtonApp>
               )}
 
-              {status !== 'ACTIVE' && (
+              {showCheckoutAction && (
                 <ButtonApp
                   intent={canStartTrial ? 'secondary' : 'primary'}
                   style={styles.fullWidth}

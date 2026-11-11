@@ -1,4 +1,5 @@
 import { AppText } from '@/ui/components/AppText';
+import { YearlyExpiryNotice } from '@/ui/components/YearlyExpiryNotice';
 import { CurrentGoal } from '@/ui/screens/home/components/CurrentGoal';
 import { styles } from '@/ui/screens/home/components/Header/styles';
 import { WeekCalendar } from '@/ui/screens/home/components/WeekCalendar';
@@ -28,6 +29,7 @@ export function Header({ onSummaryEndLayout }: IHeaderProps) {
         onLayout={event => setContainerY(event.nativeEvent.layout.y)}
       >
         <View style={[styles.content, { opacity: isLoading ? 0.4 : 1 }]}>
+          <YearlyExpiryNotice />
           <WeekCalendar />
           <CurrentGoal />
         </View>

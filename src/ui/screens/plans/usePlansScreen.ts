@@ -11,6 +11,7 @@ import { PlanId, Subscription } from '@/app/types/Subscription';
 import { useSafeAreaInsets } from '@/ui/hooks/useSafeAreaInsets';
 import { daysUntil } from '@/ui/utils/daysUntil';
 import { formatPrice } from '@/ui/utils/formatPrice';
+import { getYearlyExpiry } from '@/ui/utils/getYearlyExpiry';
 import { useFocusEffect } from '@react-navigation/native';
 import * as WebBrowser from 'expo-web-browser';
 import { useCallback, useEffect, useRef, useState } from 'react';
@@ -23,9 +24,11 @@ export type PlanStatus =
   | 'ACTIVE'
   | 'GRACE'
   | 'PAST_DUE'
+  | 'YEARLY_EXPIRED'
   | 'EXPIRED';
 
 const CHECKOUT_PENDING_KEY = 'nacal:checkout:pending';
+const CHECKOUT_PENDING_SEPARATOR = '|';
 const CHECKOUT_PENDING_MAX_AGE_MS = 30 * 60_000;
 const POLL_MAX_ATTEMPTS = 8;
 const POLL_INTERVAL_MS = 2500;
@@ -62,7 +65,9 @@ export function usePlansScreen() {
   const { createCheckout, isPending: isCreatingCheckout } = useCreateCheckout();
   const { cancelSubscription, isPending: isCanceling } = useCancelSubscription();
 
-  const [selectedPlanId, setSelectedPlanId] = useState<PlanId>('PRO_MONTHLY');
+  const [selectedPlanId, setSelectedPlanId] = useState<PlanId>(
+    () => subscription?.planId === 'PRO_YEARLY' ? 'PRO_YEARLY' : 'PRO_MONTHLY',
+  );
   const [isConfirming, setIsConfirming] = useState(false);
   const [awaitingPayment, setAwaitingPayment] = useState(false);
   const [showCancelConfirm, setShowCancelConfirm] = useState(false);
@@ -70,11 +75,15 @@ export function usePlansScreen() {
   const confirmingRef = useRef(false);
   // token de execução do polling: incrementar invalida runs antigos (dismiss/unmount)
   const pollRunRef = useRef(0);
+  const renewalBaselineRef = useRef<number | null>(null);
 
   const needsClock = Boolean(subscription?.trialEndsAt || subscription?.paidUntil);
 
   const plans = plansData?.plans ?? [];
-  const selectedPlan = plans.find((plan) => plan.id === selectedPlanId) ?? null;
+  const yearlyExpiry = getYearlyExpiry(subscription, new Date(now));
+  const isYearlyExpiring = yearlyExpiry?.state === 'EXPIRING';
+  const checkoutPlanId: PlanId = isYearlyExpiring ? 'PRO_YEARLY' : selectedPlanId;
+  const selectedPlan = plans.find((plan) => plan.id === checkoutPlanId) ?? null;
   const currentPlan = subscription
     ? plans.find((plan) => plan.id === subscription.planId) ?? null
     : null;
@@ -83,10 +92,13 @@ export function usePlansScreen() {
     ? daysUntil(subscription.trialEndsAt, new Date(now))
     : null;
 
-  const status = derivePlanStatus(subscription, now);
+  const status: PlanStatus = yearlyExpiry?.state === 'EXPIRED'
+    ? 'YEARLY_EXPIRED'
+    : derivePlanStatus(subscription, now);
 
   const canStartTrial = !subscription;
   const showCycleSelector = status !== 'ACTIVE';
+  const showCheckoutAction = status !== 'ACTIVE' || isYearlyExpiring;
   const showConfirmPanel = isConfirming || awaitingPayment;
   const isYearlyActive = status === 'ACTIVE' && subscription?.planId === 'PRO_YEARLY';
   const showCancelAction = status === 'TRIAL' || (status === 'ACTIVE' && !isYearlyActive);
@@ -100,6 +112,10 @@ export function usePlansScreen() {
 
     if (status === 'PAST_DUE') {
       return `Pagar agora${price}`;
+    }
+
+    if (yearlyExpiry && checkoutPlanId === 'PRO_YEARLY') {
+      return `Renovar${price}`;
     }
 
     if (status === 'GRACE') {
@@ -132,7 +148,12 @@ export function usePlansScreen() {
 
         const current = lastResult.data?.subscription ?? null;
 
-        if (current?.status === 'ACTIVE') {
+        const baseline = renewalBaselineRef.current;
+        const isPaid = current?.status === 'ACTIVE'
+          && (baseline === null || (current.paidUntil?.getTime() ?? 0) > baseline);
+
+        if (isPaid) {
+          renewalBaselineRef.current = null;
           toast.success('Pagamento confirmado! Seu Pro está ativo.');
           setAwaitingPayment(false);
           setIsConfirming(false);
@@ -189,11 +210,14 @@ export function usePlansScreen() {
 
       window.sessionStorage.removeItem(CHECKOUT_PENDING_KEY);
 
-      const timestamp = Number(raw);
+      const [rawTimestamp, rawBaseline] = raw.split(CHECKOUT_PENDING_SEPARATOR);
+      const timestamp = Number(rawTimestamp);
 
       if (!Number.isFinite(timestamp) || Date.now() - timestamp > CHECKOUT_PENDING_MAX_AGE_MS) {
         return false;
       }
+
+      renewalBaselineRef.current = rawBaseline ? Number(rawBaseline) : null;
 
       // setState não pode ser síncrono no corpo do effect (lint) — agenda em
       // macrotask; a flag já foi consumida, então é one-shot.
@@ -220,13 +244,21 @@ export function usePlansScreen() {
   async function handleCheckout() {
     try {
       const returnUrl = getCheckoutReturnUrl();
-      const { checkoutUrl } = await createCheckout({ planId: selectedPlanId, returnUrl });
+      const { checkoutUrl } = await createCheckout({ planId: checkoutPlanId, returnUrl });
+      const baseline = subscription?.status === 'ACTIVE'
+        ? subscription.paidUntil?.getTime() ?? null
+        : null;
+
+      renewalBaselineRef.current = baseline;
 
       if (Platform.OS === 'web') {
         // Mesma aba (navegador mobile + PWA): o retorno em /billing/return dá
         // reload e o efeito de boot acima confirma via esta flag.
         try {
-          window.sessionStorage.setItem(CHECKOUT_PENDING_KEY, String(Date.now()));
+          window.sessionStorage.setItem(
+            CHECKOUT_PENDING_KEY,
+            [Date.now(), baseline ?? ''].join(CHECKOUT_PENDING_SEPARATOR),
+          );
         } catch {
           // sessionStorage indisponível — segue pro checkout mesmo assim
         }
@@ -246,6 +278,7 @@ export function usePlansScreen() {
   function handleDismissConfirm() {
     pollRunRef.current += 1;
     confirmingRef.current = false;
+    renewalBaselineRef.current = null;
     setIsConfirming(false);
     setAwaitingPayment(false);
   }
@@ -333,6 +366,8 @@ export function usePlansScreen() {
     selectedPlan,
     canStartTrial,
     showCycleSelector,
+    showCheckoutAction,
+    yearlyExpiry,
     showConfirmPanel,
     showCancelAction,
     showCancelConfirm,

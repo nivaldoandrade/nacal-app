@@ -6,6 +6,7 @@ import { theme } from '@/ui/styles/theme';
 import { AppStackNavigatorProps } from '@/app/navigation/AppStack';
 import { formatShortDate } from '@/ui/utils/formatShortDate';
 import { daysUntil } from '@/ui/utils/daysUntil';
+import { formatYearlyExpiryCountdown, getYearlyExpiry } from '@/ui/utils/getYearlyExpiry';
 import { useNavigation } from '@react-navigation/native';
 import { View } from 'react-native';
 
@@ -17,6 +18,7 @@ export function PlanSection() {
   const used = mealQuota?.used ?? 0;
   const isPro = subscription?.plan === 'PRO';
 
+  const yearlyExpiry = getYearlyExpiry(subscription, new Date());
   const planLabel = getPlanLabel(subscription?.planId ?? null);
   const statusLine = getStatusLine();
 
@@ -33,6 +35,16 @@ export function PlanSection() {
   }
 
   function getStatusLine(): string {
+    if (yearlyExpiry?.state === 'EXPIRED') {
+      return `Venceu em ${formatShortDate(yearlyExpiry.paidUntil)}`;
+    }
+
+    if (yearlyExpiry) {
+      const countdown = formatYearlyExpiryCountdown(yearlyExpiry.daysLeft);
+
+      return `${countdown.charAt(0).toUpperCase()}${countdown.slice(1)} (${formatShortDate(yearlyExpiry.paidUntil)})`;
+    }
+
     if (!subscription || subscription.plan === 'FREE') {
       return `${used} de ${limit} refeições este mês`;
     }
@@ -88,7 +100,7 @@ export function PlanSection() {
           {statusLine}
         </AppText>
         <ButtonApp intent='secondary' onPress={() => navigate('Plans')}>
-          Ver planos
+          {yearlyExpiry ? 'Renovar plano' : 'Ver planos'}
         </ButtonApp>
       </View>
     </View>

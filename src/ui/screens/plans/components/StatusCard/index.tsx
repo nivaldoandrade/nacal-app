@@ -5,6 +5,7 @@ import { theme } from '@/ui/styles/theme';
 import { MealQuota, Subscription } from '@/app/types/Subscription';
 import { formatPrice } from '@/ui/utils/formatPrice';
 import { formatShortDate } from '@/ui/utils/formatShortDate';
+import { formatYearlyExpiryCountdown, YearlyExpiry } from '@/ui/utils/getYearlyExpiry';
 import { View } from 'react-native';
 
 interface IStatusCardProps {
@@ -14,6 +15,7 @@ interface IStatusCardProps {
   currentPlanName: string | null;
   currentPlanPrice: number | null;
   trialDaysLeft: number | null;
+  yearlyExpiry: YearlyExpiry | null;
 }
 
 export function StatusCard({
@@ -23,6 +25,7 @@ export function StatusCard({
   currentPlanName,
   currentPlanPrice,
   trialDaysLeft,
+  yearlyExpiry,
 }: IStatusCardProps) {
   const limit = quota?.limit ?? 20;
   const used = quota?.used ?? 0;
@@ -32,7 +35,12 @@ export function StatusCard({
   const cycleSuffix = subscription?.planId === 'PRO_YEARLY' ? '/ano' : '/mês';
 
   function renderQuota() {
-    if (!quota || (status !== 'FREE' && status !== 'TRIAL_EXPIRED' && status !== 'EXPIRED')) {
+    const isFreeStatus = status === 'FREE'
+      || status === 'TRIAL_EXPIRED'
+      || status === 'EXPIRED'
+      || status === 'YEARLY_EXPIRED';
+
+    if (!quota || quota.limit === null || !isFreeStatus) {
       return null;
     }
 
@@ -150,6 +158,41 @@ export function StatusCard({
                 {currentPlanPrice !== null ? cycleSuffix : ''}
               </AppText>
             </View>
+            {yearlyExpiry && (
+              <View style={styles.warningRow}>
+                <AppText
+                  size='sm'
+                  weight='medium'
+                  color={yearlyExpiry.isUrgent ? theme.colors.support.orange : theme.colors.gray[700]}
+                >
+                  Seu plano {formatYearlyExpiryCountdown(yearlyExpiry.daysLeft)}. Renove para continuar no Pro: o novo ano começa a contar do vencimento atual, sem perder nenhum dia.
+                </AppText>
+              </View>
+            )}
+          </>
+        );
+
+      case 'YEARLY_EXPIRED':
+        return (
+          <>
+            <View style={styles.headerRow}>
+              <View style={subscription?.plan === 'PRO' ? styles.badgePro : styles.badgeFree}>
+                <AppText
+                  size='xs'
+                  weight='medium'
+                  color={subscription?.plan === 'PRO' ? theme.colors.lime[800] : theme.colors.gray[700]}
+                >
+                  {subscription?.plan === 'PRO' ? 'Pro' : 'Free'}
+                </AppText>
+              </View>
+              <AppText weight='semiBold'>Seu Pro Anual venceu</AppText>
+            </View>
+            <AppText size='sm' color={theme.colors.gray[700]}>
+              {subscription?.plan === 'PRO'
+                ? `Seu plano venceu em ${formatShortDate(subscription?.paidUntil)}. Renove nos próximos dias para continuar no Pro sem interrupção.`
+                : `Seu plano venceu em ${formatShortDate(subscription?.paidUntil)} e agora você está no Free, com ${limit} refeições AI por mês. Renove quando quiser para voltar a registrar até 20 refeições por dia.`}
+            </AppText>
+            {renderQuota()}
           </>
         );
 
