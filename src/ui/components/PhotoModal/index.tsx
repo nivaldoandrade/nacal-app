@@ -108,10 +108,17 @@ export function PhotoModal({
             {visible && permission.granted && (
               <>
                 {!photoUri ? (
-                  <CameraCapture
-                    ref={cameraRef}
-                    style={styles.cameraAndPhotoContainer}
-                  />
+                  <View style={styles.cameraAndPhotoContainer}>
+                    <CameraCapture
+                      ref={cameraRef}
+                      style={styles.cameraAndPhotoContainer}
+                    />
+                    <View style={styles.framingHint}>
+                      <AppText size='xs' color={theme.colors.white}>
+                        Enquadre só o prato, sem rostos nem documentos
+                      </AppText>
+                    </View>
+                  </View>
                 ) : (
                   <Image
                     source={{ uri: photoUri }}

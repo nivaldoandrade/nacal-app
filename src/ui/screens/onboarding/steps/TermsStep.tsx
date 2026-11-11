@@ -1,3 +1,5 @@
+import { legal } from '@/app/config/legal';
+import { openExternalUrl } from '@/app/libs/openExternalUrl';
 import { AppText } from '@/ui/components/AppText';
 import { Step, StepContent, StepFooter, StepHeader, StepSubTitle, StepTitle } from '@/ui/screens/onboarding/components/Step';
 import { StepAdvanceButton } from '@/ui/screens/onboarding/components/StepAdvanceButton';
@@ -37,22 +39,45 @@ export function TermsStep() {
             name='acceptedTerms'
             control={control}
             render={({ field }) => (
-              <Pressable
-                accessibilityRole='checkbox'
-                accessibilityLabel='Aceitar os Termos de Uso e a Política de Privacidade'
-                accessibilityState={{ checked: field.value }}
-                onPress={() => field.onChange(!field.value)}
-                style={styles.consent}
-              >
-                <View style={[styles.checkbox, field.value && styles.checkboxChecked]}>
+              <View style={styles.consent}>
+                <Pressable
+                  accessibilityRole='checkbox'
+                  accessibilityLabel='Aceitar os Termos de Uso e a Política de Privacidade'
+                  accessibilityState={{ checked: field.value }}
+                  hitSlop={8}
+                  onPress={() => field.onChange(!field.value)}
+                  style={[styles.checkbox, field.value && styles.checkboxChecked]}
+                >
                   {field.value && (
                     <CheckIcon size={16} color={theme.colors.black[700]} />
                   )}
-                </View>
+                </Pressable>
                 <AppText style={styles.consentText}>
-                  Li e aceito os Termos de Uso e a Política de Privacidade.
+                  <AppText onPress={() => field.onChange(!field.value)}>
+                    Li e aceito os{' '}
+                  </AppText>
+                  <AppText
+                    accessibilityRole='link'
+                    weight='medium'
+                    style={styles.link}
+                    onPress={() => openExternalUrl(legal.termsUrl)}
+                  >
+                    Termos de Uso
+                  </AppText>
+                  <AppText onPress={() => field.onChange(!field.value)}>
+                    {' '}e a{' '}
+                  </AppText>
+                  <AppText
+                    accessibilityRole='link'
+                    weight='medium'
+                    style={styles.link}
+                    onPress={() => openExternalUrl(legal.privacyUrl)}
+                  >
+                    Política de Privacidade
+                  </AppText>
+                  .
                 </AppText>
-              </Pressable>
+              </View>
             )}
           />
         </View>
@@ -95,5 +120,8 @@ const styles = StyleSheet.create({
   },
   consentText: {
     flex: 1,
+  },
+  link: {
+    textDecorationLine: 'underline',
   },
 });

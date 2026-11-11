@@ -51,6 +51,17 @@ export const styles = StyleSheet.create({
     width: '100%',
   },
 
+  framingHint: {
+    position: 'absolute',
+    bottom: 12,
+    alignSelf: 'center',
+    backgroundColor: 'rgba(0, 0, 0, 0.55)',
+    borderRadius: 20,
+    paddingVertical: 6,
+    paddingHorizontal: 14,
+    pointerEvents: 'none',
+  },
+
   footer: {
     minHeight: 200,
     alignItems: 'center',

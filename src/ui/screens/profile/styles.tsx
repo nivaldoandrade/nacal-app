@@ -68,6 +68,31 @@ export const styles = StyleSheet.create({
     backgroundColor: theme.colors.gray[200],
   },
 
+  legalCard: {
+    backgroundColor: theme.colors.white,
+    borderWidth: 1,
+    borderColor: theme.colors.gray[400],
+    borderRadius: 16,
+    paddingHorizontal: 16,
+  },
+
+  legalRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    paddingVertical: 14,
+  },
+
+  legalRowDivider: {
+    borderBottomWidth: 1,
+    borderColor: theme.colors.gray[400],
+  },
+
+  legalRowText: {
+    flex: 1,
+    gap: 2,
+  },
+
   planBadgeFree: {
     backgroundColor: theme.colors.gray[200],
     borderRadius: 20,
