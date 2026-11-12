@@ -62,7 +62,7 @@ Este repositório contém o **app frontend** (web + iOS + Android). O backend é
 | `MealDetails` | Detalhes da refeição: status de processamento, calorias e macros (por alimento e total), "Adicionar item" (`AddItemModal`), remover item e excluir refeição (`DeleteMealSheet`) |
 | `EditGoals`   | Edição manual das metas diárias de calorias e macros                                    |
 | `Profile`     | Edição do perfil e acesso às metas                                                      |
-| `Plans`       | Planos Free vs Pro, trial, cota mensal, checkout (Asaas) e cancelamento                 |
+| `Plans`       | Planos Free vs Pro, trial, cota mensal, checkout (Asaas), aviso com links de Termos e Privacidade antes do checkout e cancelamento |
 
 A troca entre as stacks é dirigida pelo `AuthContext`: `RootStack` renderiza `Auth` enquanto `!isSignedIn || shouldShowOnboarding`, e `App` caso contrário.
 

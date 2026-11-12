@@ -1,3 +1,5 @@
+import { legal } from '@/app/config/legal';
+import { openExternalUrl } from '@/app/libs/openExternalUrl';
 import { AppText } from '@/ui/components/AppText';
 import { ButtonApp } from '@/ui/components/Button';
 import { HeaderApp } from '@/ui/components/HeaderApp';
@@ -196,6 +198,36 @@ export function Plans() {
                   style={styles.hint}
                 >
                   7 dias grátis, sem cartão. Depois disso, volte a qualquer momento para o Free.
+                </AppText>
+              )}
+
+              {showCheckoutAction && (
+                <AppText
+                  size='sm'
+                  color={theme.colors.gray[700]}
+                  style={styles.hint}
+                >
+                  Ao assinar, você concorda com os{' '}
+                  <AppText
+                    size='sm'
+                    accessibilityRole='link'
+                    color={theme.colors.gray[700]}
+                    style={styles.link}
+                    onPress={() => openExternalUrl(legal.termsUrl)}
+                  >
+                    Termos de Uso
+                  </AppText>
+                  {' '}e a{' '}
+                  <AppText
+                    size='sm'
+                    accessibilityRole='link'
+                    color={theme.colors.gray[700]}
+                    style={styles.link}
+                    onPress={() => openExternalUrl(legal.privacyUrl)}
+                  >
+                    Política de Privacidade
+                  </AppText>
+                  .
                 </AppText>
               )}
             </View>

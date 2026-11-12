@@ -51,4 +51,8 @@ export const styles = StyleSheet.create({
   hint: {
     textAlign: 'center',
   },
+
+  link: {
+    textDecorationLine: 'underline',
+  },
 });
