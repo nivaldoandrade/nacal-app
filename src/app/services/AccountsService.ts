@@ -24,11 +24,13 @@ export class AccountsService extends Service {
       : null;
 
     const mealQuota = data.mealQuota;
+    const email = data.email ?? null;
     const dailyMealQuota = data.dailyMealQuota ?? null;
 
     if (!data.isOnboarded || !data.profile || !data.goal) {
       return {
         isOnboarded: false,
+        email,
         profile: null,
         goal: null,
         subscription,
@@ -39,6 +41,7 @@ export class AccountsService extends Service {
 
     return {
       isOnboarded: true,
+      email,
       profile: {
         ...data.profile,
         birthDate: this.parseDateFromAPI(data.profile.birthDate),
@@ -74,6 +77,7 @@ export namespace AccountsService {
 
   export type MeResponse = {
     isOnboarded: boolean;
+    email?: string;
     profile: {
       name: string;
       birthDate: string;
@@ -102,6 +106,7 @@ export namespace AccountsService {
   export type Me =
     | {
         isOnboarded: false;
+        email: string | null;
         profile: null;
         goal: null;
         subscription: Subscription | null;
@@ -110,6 +115,7 @@ export namespace AccountsService {
       }
     | {
         isOnboarded: true;
+        email: string | null;
         profile: Omit<NonNullable<MeResponse['profile']>, 'birthDate'> & {
           birthDate: Date;
         };

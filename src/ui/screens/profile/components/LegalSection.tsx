@@ -1,4 +1,5 @@
-import { legal } from '@/app/config/legal';
+import { getDeleteAccountUrl, legal } from '@/app/config/legal';
+import { useAccount } from '@/app/hooks/queries/useAccount';
 import { openExternalUrl } from '@/app/libs/openExternalUrl';
 import { AppText } from '@/ui/components/AppText';
 import { styles } from '@/ui/screens/profile/styles';
@@ -12,6 +13,8 @@ const links = [
 ];
 
 export function LegalSection() {
+  const { email } = useAccount();
+
   return (
     <View style={styles.planSection}>
       <AppText size='sm' weight='medium' color={theme.colors.gray[700]}>
@@ -31,13 +34,13 @@ export function LegalSection() {
         ))}
         <Pressable
           accessibilityRole='link'
-          onPress={() => openExternalUrl(legal.deleteAccountUrl)}
+          onPress={() => openExternalUrl(getDeleteAccountUrl(email))}
           style={styles.legalRow}
         >
           <View style={styles.legalRowText}>
             <AppText>Excluir conta</AppText>
             <AppText size='sm' color={theme.colors.gray[700]}>
-              Envie o pedido para {legal.supportEmail} pelo e-mail da sua conta. Apagamos tudo em até 15 dias.
+              Abrimos um e-mail para {legal.supportEmail} com o e-mail da sua conta. Se ele sair de outro endereço, confirmamos o pedido pelo e-mail da conta. Apagamos tudo em até 15 dias.
             </AppText>
           </View>
           <ChevronRightIcon size={18} color={theme.colors.gray[700]} />

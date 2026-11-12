@@ -19,6 +19,7 @@ export function useAccount({ enabled = true }: IUseAccountParams = {}) {
 
   return {
     account: data?.isOnboarded ? data : null,
+    email: data?.email ?? null,
     subscription,
     mealQuota,
     dailyMealQuota,
