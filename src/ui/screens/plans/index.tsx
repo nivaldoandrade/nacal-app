@@ -10,8 +10,10 @@ import { styles } from '@/ui/screens/plans/styles';
 import { usePlansScreen } from '@/ui/screens/plans/usePlansScreen';
 import { theme } from '@/ui/styles/theme';
 import { formatShortDate } from '@/ui/utils/formatShortDate';
-import { ReactNode } from 'react';
-import { ActivityIndicator, ScrollView, View } from 'react-native';
+import { useFocusEffect } from '@react-navigation/native';
+import * as SystemUI from 'expo-system-ui';
+import { ReactNode, useCallback } from 'react';
+import { ActivityIndicator, Platform, ScrollView, View } from 'react-native';
 
 export function Plans() {
   const {
@@ -47,6 +49,17 @@ export function Plans() {
     handleCancel,
     runPaymentConfirmation,
   } = usePlansScreen();
+
+  useFocusEffect(
+    useCallback(() => {
+      if (!(Platform.OS === 'web')) {
+        return;
+      }
+
+      SystemUI.setBackgroundColorAsync(null);
+
+    }, []),
+  );
 
   const limit = mealQuota?.limit ?? 20;
   const monthlyPlan = plans.find((plan) => plan.cycle === 'MONTHLY');
