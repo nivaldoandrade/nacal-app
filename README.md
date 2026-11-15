@@ -159,6 +159,7 @@ Tela (src/ui)
 3. Se a senha bater, o app faz login automático e segue para a home com o onboarding concluído;
 4. Se a API responder `passwordResetRequired: true` (senha diferente da do cadastro), a tela mostra "Por segurança, crie uma nova senha" e leva ao fluxo de esqueci a senha;
 5. Login com uma conta ainda não confirmada (`403 EMAIL_NOT_CONFIRMED`) leva para `ConfirmEmail`, que reenvia o código automaticamente. Se o app foi reaberto e a senha não está mais em memória, a tela mostra um campo de senha acima do código.
+6. Se o código não for confirmado e o dono do e-mail entrar com Google, a API descarta o cadastro pendente (o Google prova o e-mail, não quem preencheu o cadastro): pela tela de login ele cai no onboarding; se terminou o onboarding com o Google, valem os dados preenchidos nessa vez (`completeSocialOnboarding`).
 
 ### Planos e pagamento (billing)
 
