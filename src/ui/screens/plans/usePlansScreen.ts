@@ -42,9 +42,9 @@ function derivePlanStatus(subscription: Subscription | null, now: number): PlanS
     case 'TRIALING':
       return (subscription.trialEndsAt?.getTime() ?? 0) > now ? 'TRIAL' : 'TRIAL_EXPIRED';
     case 'ACTIVE':
-      return 'ACTIVE';
+      return subscription.plan === 'PRO' ? 'ACTIVE' : 'EXPIRED';
     case 'PAST_DUE':
-      return (subscription.paidUntil?.getTime() ?? 0) > now ? 'PAST_DUE' : 'EXPIRED';
+      return subscription.plan === 'PRO' ? 'PAST_DUE' : 'EXPIRED';
     case 'CANCELED':
       return (subscription.paidUntil?.getTime() ?? 0) > now ? 'GRACE' : 'EXPIRED';
     default:
@@ -54,7 +54,32 @@ function derivePlanStatus(subscription: Subscription | null, now: number): PlanS
 
 function notifyError(error: unknown) {
   console.error(error);
-  toast.error(getErrorMessage(getApiErrorCode(error)));
+
+  const code = getApiErrorCode(error);
+
+  if (code === 'SUBSCRIPTION_ALREADY_ACTIVE') {
+    queryClient.invalidateQueries({ queryKey: ['accounts'] });
+  }
+
+  toast.error(getErrorMessage(code));
+}
+
+function openInvoiceWindow(): Window | null {
+  if (Platform.OS !== 'web' || typeof window === 'undefined') {
+    return null;
+  }
+
+  try {
+    const invoiceWindow = window.open('', '_blank');
+
+    if (invoiceWindow) {
+      invoiceWindow.opener = null;
+    }
+
+    return invoiceWindow;
+  } catch {
+    return null;
+  }
 }
 
 export function usePlansScreen() {
@@ -82,7 +107,16 @@ export function usePlansScreen() {
   const plans = plansData?.plans ?? [];
   const yearlyExpiry = getYearlyExpiry(subscription, new Date(now));
   const isYearlyExpiring = yearlyExpiry?.state === 'EXPIRING';
-  const checkoutPlanId: PlanId = isYearlyExpiring ? 'PRO_YEARLY' : selectedPlanId;
+  const status: PlanStatus = yearlyExpiry?.state === 'EXPIRED'
+    ? 'YEARLY_EXPIRED'
+    : derivePlanStatus(subscription, now);
+  const checkoutPlanId: PlanId = (() => {
+    if (status === 'PAST_DUE' && subscription) {
+      return subscription.planId;
+    }
+
+    return isYearlyExpiring ? 'PRO_YEARLY' : selectedPlanId;
+  })();
   const selectedPlan = plans.find((plan) => plan.id === checkoutPlanId) ?? null;
   const currentPlan = subscription
     ? plans.find((plan) => plan.id === subscription.planId) ?? null
@@ -92,12 +126,8 @@ export function usePlansScreen() {
     ? daysUntil(subscription.trialEndsAt, new Date(now))
     : null;
 
-  const status: PlanStatus = yearlyExpiry?.state === 'EXPIRED'
-    ? 'YEARLY_EXPIRED'
-    : derivePlanStatus(subscription, now);
-
   const canStartTrial = !subscription;
-  const showCycleSelector = status !== 'ACTIVE';
+  const showCycleSelector = status !== 'ACTIVE' && status !== 'PAST_DUE';
   const showCheckoutAction = status !== 'ACTIVE' || isYearlyExpiring;
   const showConfirmPanel = isConfirming || awaitingPayment;
   const isYearlyActive = status === 'ACTIVE' && subscription?.planId === 'PRO_YEARLY';
@@ -242,14 +272,24 @@ export function usePlansScreen() {
   }
 
   async function handleCheckout() {
+    const invoiceWindow = status === 'PAST_DUE' ? openInvoiceWindow() : null;
+
     try {
       const returnUrl = getCheckoutReturnUrl();
-      const { checkoutUrl } = await createCheckout({ planId: checkoutPlanId, returnUrl });
+      const { checkoutUrl, type } = await createCheckout({ planId: checkoutPlanId, returnUrl });
       const baseline = subscription?.status === 'ACTIVE'
         ? subscription.paidUntil?.getTime() ?? null
         : null;
 
       renewalBaselineRef.current = baseline;
+
+      if (Platform.OS === 'web' && type === 'INVOICE' && invoiceWindow && !invoiceWindow.closed) {
+        invoiceWindow.location.href = checkoutUrl;
+        setAwaitingPayment(true);
+        return;
+      }
+
+      invoiceWindow?.close();
 
       if (Platform.OS === 'web') {
         // Mesma aba (navegador mobile + PWA): o retorno em /billing/return dá
@@ -271,6 +311,7 @@ export function usePlansScreen() {
       await WebBrowser.openAuthSessionAsync(checkoutUrl, returnUrl);
       await runPaymentConfirmation();
     } catch (error) {
+      invoiceWindow?.close();
       notifyError(error);
     }
   }

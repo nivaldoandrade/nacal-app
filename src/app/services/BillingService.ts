@@ -53,9 +53,12 @@ export namespace BillingService {
     returnUrl: string;
   };
 
+  export type CheckoutType = 'CHECKOUT' | 'INVOICE';
+
   export type CreateCheckoutResponse = {
     checkoutUrl: string;
-    expiresAt: string;
+    expiresAt: string | null;
+    type?: CheckoutType;
   };
 
   export type CancelResponse = {

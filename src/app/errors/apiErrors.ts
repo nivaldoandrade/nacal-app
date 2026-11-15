@@ -24,6 +24,7 @@ export const ErrorCode = {
   FREE_QUOTA_EXCEEDED: 'FREE_QUOTA_EXCEEDED',
   DAILY_MEAL_LIMIT_REACHED: 'DAILY_MEAL_LIMIT_REACHED',
   TRIAL_NOT_AVAILABLE: 'TRIAL_NOT_AVAILABLE',
+  SUBSCRIPTION_ALREADY_ACTIVE: 'SUBSCRIPTION_ALREADY_ACTIVE',
   BILLING_ERROR: 'BILLING_ERROR',
 
   // HTTP
@@ -60,6 +61,7 @@ export const ApiErrorMessages: Record<ErrorCode, string> = {
   FREE_QUOTA_EXCEEDED: 'Você atingiu o limite de refeições do plano Free deste mês. Assine o Pro para registrar até 20 refeições por dia.',
   DAILY_MEAL_LIMIT_REACHED: 'Você chegou ao limite de 20 refeições de hoje. Amanhã você pode registrar de novo.',
   TRIAL_NOT_AVAILABLE: 'O teste grátis ainda não está disponível para esta conta. Escolha um plano para assinar.',
+  SUBSCRIPTION_ALREADY_ACTIVE: 'Você já tem uma assinatura Pro ativa. Atualizamos a tela com a situação dela.',
   BILLING_ERROR: 'Não conseguimos falar com o serviço de pagamento agora. Tente novamente em instantes.',
   BAD_REQUEST: 'Requisição inválida.',
   INTERNAL_SERVER_ERROR: 'Erro interno. Tente novamente mais tarde.',

@@ -221,7 +221,7 @@ export function StatusCard({
               <AppText weight='semiBold'>Pagamento pendente</AppText>
             </View>
             <AppText size='sm' color={theme.colors.gray[700]}>
-              Há um pagamento aguardando aprovação. Regularize para manter o Pro sem interrupções.
+              Não conseguimos cobrar a última mensalidade no cartão. Pague a fatura em aberto para continuar com o Pro.
             </AppText>
           </>
         );
