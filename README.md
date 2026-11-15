@@ -23,7 +23,7 @@ Este repositório contém o **app frontend** (web + iOS + Android). O backend é
 
 - **Autenticação completa**: Cadastro e login com e-mail/senha, **confirmação de e-mail por código**, recuperação de senha por código e login com **Google (OAuth 2.0 + PKCE)**;
 - **Beta fechado**: e-mails fora da allowlist da API recebem uma mensagem amigável, tanto no cadastro por e-mail quanto no login com Google;
-- **Sessão silenciosa**: Tokens persistem em AsyncStorage e o access token é renovado automaticamente em respostas `401` (interceptor de refresh no axios);
+- **Sessão silenciosa**: Tokens persistem em AsyncStorage e o access token é renovado automaticamente em respostas `401` (interceptor de refresh no axios): um único refresh por vez para os `401` que chegam juntos (timeout de 15 s), a requisição é repetida até duas vezes com o token novo e o token já renovado por outra aba é reaproveitado. Com o app aberto, só desloga sem tokens guardados ou com `401`/`400` no refresh (com o toast "Sua sessão expirou. Faça login novamente."); sem rede, timeout, `429` e `5xx` só fazem a requisição falhar. Na abertura do app, se o primeiro `/me` (timeout de 15 s) ou o refresh dele falhar por rede, timeout, `429` ou `5xx`, os tokens ficam guardados e aparece a tela `ConnectionError` ("Não foi possível carregar sua conta", com "Tentar de novo" e "Sair da conta"; se a nova tentativa falhar, toast "Ainda não conseguimos conectar. Tente de novo em instantes."); os outros erros da abertura (por exemplo `404` do `/me`) deslogam. Um 401 atrasado de uma sessão anterior (depois de sair da conta) é rejeitado, sem repetir com o token da sessão nova;
 - **Onboarding em 8 etapas**: Aceite dos Termos de Uso e da Política de Privacidade (com links para as duas páginas), objetivo, gênero, data de nascimento, altura, peso, nível de atividade e criação de conta: o backend deriva o plano diário de calorias e macros (TDEE/BMR);
 - **Home com visão do dia**: Calendário semanal, progresso dos macros no **MacroRainbow**, lista das refeições do dia e pull-to-refresh;
 - **Registro de refeição por foto ou áudio**: Captura de câmera (permissão usada somente no momento da foto) ou nota de voz com limite de **30 segundos** e playback para revisar antes de enviar; depois de tirar a foto, um campo opcional ("Quer contar algum detalhe?", até 300 caracteres) permite completar o que a foto não mostra, como uma bebida em copo opaco, um ingrediente escondido, a quantidade ou qual refeição foi; as fotos são normalizadas para JPEG (lado maior de 1024px, qualidade 0.9) e o app envia o **fuso do dispositivo** para a API nomear e classificar a refeição pelo horário local e agrupá-la no dia local correto;
@@ -64,7 +64,7 @@ Este repositório contém o **app frontend** (web + iOS + Android). O backend é
 | `Profile`     | Edição do perfil e acesso às metas                                                      |
 | `Plans`       | Planos Free vs Pro, trial, cota mensal, checkout (Asaas), aviso com links de Termos e Privacidade antes do checkout e cancelamento |
 
-A troca entre as stacks é dirigida pelo `AuthContext`: `RootStack` renderiza `Auth` enquanto `!isSignedIn || shouldShowOnboarding`, e `App` caso contrário.
+A troca entre as stacks é dirigida pelo `AuthContext`: `RootStack` renderiza `ConnectionError` quando a abertura do app não conseguiu carregar a conta por falha passageira (`sessionRestoreFailed`), `Auth` enquanto `!isSignedIn || shouldShowOnboarding`, e `App` caso contrário.
 
 ## Arquitetura
 
@@ -331,7 +331,8 @@ src/
     │   ├── mealDetails/
     │   ├── editGoals/
     │   ├── profile/
-    │   └── plans/               # index.tsx · styles.ts · usePlansScreen.ts · components/
+    │   ├── plans/               # index.tsx · styles.ts · usePlansScreen.ts · components/
+    │   └── connectionError/     # falha ao carregar a conta na abertura do app (index.tsx · styles.ts)
     ├── hooks/
     ├── styles/
     └── utils/

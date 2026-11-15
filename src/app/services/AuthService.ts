@@ -51,6 +51,7 @@ export class AuthService extends Service {
     const { data } = await this.client.post<AuthService.RefreshToken['response']>(
       'auth/refresh-token',
       params,
+      { timeout: 15000 },
     );
 
     return data;

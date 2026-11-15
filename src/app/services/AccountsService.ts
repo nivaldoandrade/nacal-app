@@ -7,7 +7,7 @@ import { MealQuota, Subscription } from '@/app/types/Subscription';
 export class AccountsService extends Service {
 
   static async me(): Promise<AccountsService.Me> {
-    const { data } = await this.client.get<AccountsService.MeResponse>('me');
+    const { data } = await this.client.get<AccountsService.MeResponse>('me', { timeout: 15000 });
 
     const subscription: Subscription | null = data.subscription
       ? {

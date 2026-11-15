@@ -1,9 +1,13 @@
 import { env } from '@/app/config/env';
-import axios, { create, isAxiosError } from 'axios';
+import axios, { create, InternalAxiosRequestConfig, isAxiosError } from 'axios';
 import base64 from 'react-native-base64';
 
 export abstract class Service {
   private static interceptorId: number | undefined;
+
+  private static refreshing: Promise<string> | undefined;
+
+  private static readonly MAX_AUTH_RETRIES = 2;
 
   protected static client = create({
     baseURL: env.EXPO_PUBLIC_API_URL,
@@ -26,7 +30,7 @@ export abstract class Service {
     this.interceptorId = undefined;
   }
 
-  static setupRefreshInterceptor(onRefresh: () => Promise<string | undefined>) {
+  static setupRefreshInterceptor(onRefresh: (failedAccessToken: string | undefined) => Promise<string>) {
     this.removeInterceptorId();
 
     this.interceptorId = this.client.interceptors.response.use(
@@ -36,14 +40,28 @@ export abstract class Service {
           return Promise.reject(error);
         }
 
-        const originalRequest = error.config;
+        const originalRequest = error.config as Service.RetriableRequestConfig | undefined;
         const is401 = error.response?.status === 401;
         const isRefreshTokenEndpoint = originalRequest?.url?.includes('auth/refresh-token');
+        const authRetries = originalRequest?._authRetries ?? 0;
 
-        if (!is401 || isRefreshTokenEndpoint || !originalRequest) {
+        if (!is401 || isRefreshTokenEndpoint || !originalRequest || authRetries >= this.MAX_AUTH_RETRIES) {
           return Promise.reject(error);
         }
-        await onRefresh();
+
+        originalRequest._authRetries = authRetries + 1;
+
+        const authorization = originalRequest.headers.Authorization;
+        const failedAccessToken = typeof authorization === 'string'
+          ? authorization.replace(/^Bearer /, '')
+          : undefined;
+
+        this.refreshing ??= onRefresh(failedAccessToken).finally(() => {
+          this.refreshing = undefined;
+        });
+
+        const accessToken = await this.refreshing;
+        originalRequest.headers.Authorization = `Bearer ${accessToken}`;
 
         return this.client(originalRequest);
       },
@@ -75,6 +93,10 @@ export abstract class Service {
 }
 
 namespace Service {
+
+  export type RetriableRequestConfig = InternalAxiosRequestConfig & {
+    _authRetries?: number;
+  }
 
   export type UploadPresignedPOSTParams = {
     uploadSignature: string;
