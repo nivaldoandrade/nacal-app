@@ -20,8 +20,8 @@ export const onboardingSchema = z.object({
   }),
   account: z.object({
     email: z.email('Informe o seu email.'),
-    password: z.string().min(8, 'Pelo menos 8 caracteres.'),
-    confirmPassword: z.string().min(8, 'Confirme sua senha.'),
+    password: z.string().trim().min(8, 'Pelo menos 8 caracteres.'),
+    confirmPassword: z.string().trim().min(8, 'Confirme sua senha.'),
   }).refine(({ password, confirmPassword }) =>
     password === confirmPassword,
     {

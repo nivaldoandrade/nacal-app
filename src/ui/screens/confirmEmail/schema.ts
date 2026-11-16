@@ -6,7 +6,7 @@ export function createConfirmEmailSchema(requiresPassword: boolean) {
       .trim()
       .length(6, 'Informe o código de 6 dígitos.'),
     password: requiresPassword
-      ? z.string().min(1, 'Informe a senha que você criou no cadastro.')
+      ? z.string().trim().min(1, 'Informe a senha que você criou no cadastro.')
       : z.string().optional(),
   });
 }

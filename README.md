@@ -155,7 +155,7 @@ Tela (src/ui)
 ### Fluxo de cadastro por e-mail
 
 1. O usuário passa pelo onboarding (com o aceite dos termos) e cria a conta em `CreateAccountStep` → `POST /auth/sign-up`. A API cria um cadastro **pendente**, envia um código por e-mail e o app guarda a senha só em memória (`AuthContext`);
-2. O app abre `ConfirmEmail`. O código é enviado com a senha para `POST /auth/confirm-sign-up`: a API usa a senha para provar que quem confirma é quem criou o cadastro;
+2. O app abre `ConfirmEmail`. A senha é aparada (`trim`) nos formulários de cadastro, login, redefinição e confirmação, antes da validação de tamanho (8 caracteres, exceto na confirmação, que só exige preenchimento) e da conferência de igualdade (o Cognito recusa espaço nas pontas). O código é enviado com a senha para `POST /auth/confirm-sign-up`: a API usa a senha para provar que quem confirma é quem criou o cadastro;
 3. Se a senha bater, o app faz login automático e segue para a home com o onboarding concluído;
 4. Se a API responder `passwordResetRequired: true` (senha diferente da do cadastro), a tela mostra "Por segurança, crie uma nova senha" e leva ao fluxo de esqueci a senha;
 5. Login com uma conta ainda não confirmada (`403 EMAIL_NOT_CONFIRMED`) leva para `ConfirmEmail`, que reenvia o código automaticamente. Se o app foi reaberto e a senha não está mais em memória, a tela mostra um campo de senha acima do código.
