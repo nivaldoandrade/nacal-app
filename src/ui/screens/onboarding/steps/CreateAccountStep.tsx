@@ -50,7 +50,7 @@ export function CreateAccountStep() {
       const code = getApiErrorCode(error);
       const message = getErrorMessage(code);
 
-      if (code === ErrorCode.EMAIL_ALREADY_IN_USE) {
+      if (code === ErrorCode.EMAIL_ALREADY_IN_USE || code === ErrorCode.EMAIL_LINKED_TO_GOOGLE) {
         setError('account.email', { type: 'api', message });
       } else {
         setError('root.api', { message });

@@ -4,6 +4,7 @@ import { isAxiosError } from 'axios';
 export const ErrorCode = {
   VALIDATION: 'VALIDATION',
   EMAIL_ALREADY_IN_USE: 'EMAIL_ALREADY_IN_USE',
+  EMAIL_LINKED_TO_GOOGLE: 'EMAIL_LINKED_TO_GOOGLE',
   EMAIL_NOT_CONFIRMED: 'EMAIL_NOT_CONFIRMED',
   INVALID_CONFIRMATION_CODE: 'INVALID_CONFIRMATION_CODE',
   BETA_ACCESS_DENIED: 'BETA_ACCESS_DENIED',
@@ -45,6 +46,7 @@ export type ApiError = {
 export const ApiErrorMessages: Record<ErrorCode, string> = {
   VALIDATION: 'Verifique os campos e tente novamente.',
   EMAIL_ALREADY_IN_USE: 'Este e-mail já está em uso.',
+  EMAIL_LINKED_TO_GOOGLE: 'Este e-mail está ligado a uma conta Google. Entre com "Continuar com o Google" ou use "Esqueci minha senha" para criar uma senha.',
   EMAIL_NOT_CONFIRMED: 'Confirme seu e-mail para entrar. Se precisar, reenvie o código.',
   INVALID_CONFIRMATION_CODE: 'Código inválido ou expirado. Tente novamente.',
   BETA_ACCESS_DENIED: 'Este e-mail ainda não está liberado no beta da NaCal.',
