@@ -79,5 +79,11 @@ export function getApiErrorCode(error: unknown): ErrorCode | undefined {
     return undefined;
   }
 
-  return error.response?.data?.error?.code;
+  const code = error.response?.data?.error?.code;
+
+  if (!code && error.response?.status === 429) {
+    return ErrorCode.RATE_LIMIT_EXCEEDED;
+  }
+
+  return code;
 }

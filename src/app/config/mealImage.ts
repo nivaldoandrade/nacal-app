@@ -1,5 +1,7 @@
 export const MEAL_IMAGE_MAX_DIMENSION = 1024;
 
+export const MEAL_IMAGE_MAX_BYTES = 2 * 1024 * 1024;
+
 export const MEAL_IMAGE_JPEG_QUALITY = 0.9;
 
 export const MEAL_IMAGE_CAPTURE_JPEG_QUALITY = 0.95;

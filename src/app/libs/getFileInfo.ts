@@ -1,6 +1,7 @@
 import {
   getScaledImageSize,
   MEAL_IMAGE_JPEG_QUALITY,
+  MEAL_IMAGE_MAX_BYTES,
 } from '@/app/config/mealImage';
 import { File } from 'expo-file-system';
 import { ImageManipulator, SaveFormat } from 'expo-image-manipulator';
@@ -193,6 +194,7 @@ async function optimizeWebImageFile(
 
   if (
     file.type === 'image/jpeg' &&
+    file.size <= MEAL_IMAGE_MAX_BYTES &&
     width === image.naturalWidth &&
     height === image.naturalHeight
   ) {
