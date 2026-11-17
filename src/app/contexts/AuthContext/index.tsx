@@ -184,12 +184,7 @@ export function AuthProvider({ children }: IAuthProvider) {
       throw error;
     });
 
-    const newTokens = await AuthService.refreshToken({
-      refreshToken: storedTokens.refreshToken,
-    });
-
-    await AuthTokenManager.save(newTokens);
-    await setupAuth(newTokens.accessToken);
+    await setupAuth(storedTokens.accessToken);
 
     setIsSignedUp(true);
   }, [setupAuth]);

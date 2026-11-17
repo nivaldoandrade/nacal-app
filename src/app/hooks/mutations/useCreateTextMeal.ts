@@ -1,4 +1,6 @@
 import { getDeviceTimeZone } from '@/app/libs/getDeviceTimeZone';
+import { insertMealIntoDayList } from '@/app/hooks/mutations/mealItemsCache';
+import { updateMealQuotaInCache } from '@/app/hooks/mutations/mealQuotaCache';
 import { MealsService } from '@/app/services/MealsService';
 import { MealItem } from '@/app/types/Meal';
 import { toLocalIsoDate } from '@/app/utils/toLocalIsoDate';
@@ -12,31 +14,10 @@ export function useCreateTextMeal() {
       text: text.trim(),
       timeZone: getDeviceTimeZone(),
     }),
-    onSuccess: ({ meal }) => {
+    onSuccess: ({ meal, mealQuota, dailyMealQuota }) => {
       queryClient.setQueryData<MealItem>(['meal', meal.id], meal);
-      queryClient.setQueryData<MealsService.ListByDayResponse>(
-        ['meals', toLocalIsoDate(meal.createdAt)],
-        (current) => {
-          if (!current || current.meals.some(({ id }) => id === meal.id)) {
-            return current;
-          }
-
-          return {
-            meals: [
-              {
-                id: meal.id,
-                name: meal.name,
-                icon: meal.icon,
-                foods: meal.foods,
-                createdAt: meal.createdAt.toISOString(),
-                timeZone: getDeviceTimeZone(),
-              },
-              ...current.meals,
-            ],
-          };
-        },
-      );
-      queryClient.invalidateQueries({ queryKey: ['accounts'] });
+      insertMealIntoDayList(queryClient, meal);
+      updateMealQuotaInCache(queryClient, { mealQuota, dailyMealQuota });
     },
     onError: () => {
       queryClient.invalidateQueries({ queryKey: ['meals', toLocalIsoDate(new Date())] });

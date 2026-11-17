@@ -1,4 +1,5 @@
 import { ErrorCode, getApiErrorCode, getErrorMessage } from '@/app/errors/apiErrors';
+import { insertMealIntoDayList } from '@/app/hooks/mutations/mealItemsCache';
 import { useCreateMeal } from '@/app/hooks/mutations/useCreateMeal';
 import { useGetMealById } from '@/app/hooks/queries/useGetMealById';
 import { getMealRejectionMessage } from '@/app/libs/getMealRejectionMessage';
@@ -31,6 +32,7 @@ export function usePhotoModal({ onRequestClose }: IUsePhotoModalParams) {
   const isCapturingRef = useRef(false);
   const rejectedMealIdRef = useRef<string | null>(null);
   const failedMealIdRef = useRef<string | null>(null);
+  const timedOutMealIdRef = useRef<string | null>(null);
 
   const queryClient = useQueryClient();
   const { navigate, addListener } = useNavigation<AppStackNavigatorProps>();
@@ -38,10 +40,11 @@ export function usePhotoModal({ onRequestClose }: IUsePhotoModalParams) {
   const {
     createMeal,
     mealId,
+    uploadedAt,
     isPending,
     reset: resetCreateMeal,
   } = useCreateMeal();
-  const { meal, isLoading, isProcessing } = useGetMealById(mealId);
+  const { meal, isLoading, isProcessing, isPollingTimedOut } = useGetMealById(mealId, uploadedAt);
 
   useEffect(() => {
     if (!meal) {
@@ -85,8 +88,6 @@ export function usePhotoModal({ onRequestClose }: IUsePhotoModalParams) {
     }
 
     if (meal.status === MealStatus.SUCCESS) {
-      const isoDate = toLocalIsoDate(meal.createdAt);
-
       const unsubscribe = addListener('transitionEnd', ({ data }) => {
         unsubscribe();
         onRequestClose('fade');
@@ -98,10 +99,25 @@ export function usePhotoModal({ onRequestClose }: IUsePhotoModalParams) {
         onRequestClose('fade');
       }
 
-      queryClient.invalidateQueries({ queryKey: ['meals', isoDate] });
+      insertMealIntoDayList(queryClient, meal);
     }
 
   }, [addListener, meal, navigate, onRequestClose, queryClient, resetCreateMeal]);
+
+  useEffect(() => {
+    if (!isPollingTimedOut || !meal || timedOutMealIdRef.current === meal.id) {
+      return;
+    }
+
+    timedOutMealIdRef.current = meal.id;
+    toast.info('Sua refeição está demorando mais que o normal. Ela vai aparecer na sua lista assim que ficar pronta.');
+    queryClient.invalidateQueries({ queryKey: ['meal', meal.id], refetchType: 'none' });
+    queryClient.invalidateQueries({
+      queryKey: ['meals', toLocalIsoDate(meal.createdAt)],
+      refetchType: 'none',
+    });
+    onRequestClose('fade');
+  }, [isPollingTimedOut, meal, onRequestClose, queryClient]);
 
   async function handleSend() {
     if (!photoUri) {

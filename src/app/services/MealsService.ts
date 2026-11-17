@@ -1,6 +1,7 @@
 import { Service } from '@/app/services/Service';
 import { Food } from '@/app/types/Food';
 import { MealItem } from '@/app/types/Meal';
+import { MealQuota } from '@/app/types/Subscription';
 
 export class MealsService extends Service {
   private static readonly CREATE_FROM_TEXT_TIMEOUT_MS = 35_000;
@@ -132,6 +133,8 @@ export class MealsService extends Service {
 
     return {
       mealId: data.mealId,
+      mealQuota: data.mealQuota,
+      dailyMealQuota: data.dailyMealQuota,
     };
   }
 
@@ -161,7 +164,7 @@ export namespace MealsService {
       file: File | undefined
     },
 
-    rawResponse: {
+    rawResponse: MealQuotaUsage & {
       mealId: string;
       uploadSignature: string;
     }
@@ -169,18 +172,23 @@ export namespace MealsService {
     response: Omit<MealsService.Create['rawResponse'], 'uploadSignature'>;
   }
 
+  export type MealQuotaUsage = {
+    mealQuota?: MealQuota;
+    dailyMealQuota?: MealQuota | null;
+  };
+
   export type CreateFromText = {
     params: {
       text: string;
       timeZone: string | undefined;
     };
 
-    rawResponse: {
+    rawResponse: MealQuotaUsage & {
       meal: Omit<MealItem, 'createdAt'> & { createdAt: string };
       unidentifiedFoodsCount: number;
     };
 
-    response: {
+    response: MealQuotaUsage & {
       meal: MealItem;
       unidentifiedFoodsCount: number;
     };

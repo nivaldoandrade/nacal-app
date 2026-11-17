@@ -1,3 +1,4 @@
+import { updateMealQuotaInCache } from '@/app/hooks/mutations/mealQuotaCache';
 import { getDeviceTimeZone } from '@/app/libs/getDeviceTimeZone';
 import { getFileInfo } from '@/app/libs/getFileInfo';
 import { MealsService } from '@/app/services/MealsService';
@@ -15,7 +16,7 @@ export function useCreateMeal() {
     mutationFn: async ({ fileOrUri, description }: ICreateMealParams) => {
       const { filename, mimeType, size, file, uri } = await getFileInfo(fileOrUri);
 
-      return await MealsService.create({
+      const meal = await MealsService.create({
         uri,
         contentType: mimeType,
         fileSize: size,
@@ -24,15 +25,21 @@ export function useCreateMeal() {
         description: description?.trim() || undefined,
         file,
       });
+
+      return {
+        ...meal,
+        uploadedAt: Date.now(),
+      };
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['accounts'] });
+    onSuccess: ({ mealQuota, dailyMealQuota }) => {
+      updateMealQuotaInCache(queryClient, { mealQuota, dailyMealQuota });
     },
   });
 
   return {
     createMeal: mutateAsync,
     mealId: data?.mealId,
+    uploadedAt: data?.uploadedAt,
     isPending,
     reset,
   };
