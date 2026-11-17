@@ -15,7 +15,6 @@ export type MealItem = {
   status: MealStatus;
   rejectionReason: RejectionReason | null;
   inputFileType: MealInput;
-  inputFileUrl: string | null;
   name: string;
   icon: string;
   foods: Food[];
