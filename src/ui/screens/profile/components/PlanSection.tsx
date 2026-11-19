@@ -79,7 +79,7 @@ export function PlanSection() {
   }
 
   return (
-    <View style={styles.planSection}>
+    <View style={styles.section}>
       <AppText size='sm' weight='medium' color={theme.colors.gray[700]}>
         Plano
       </AppText>

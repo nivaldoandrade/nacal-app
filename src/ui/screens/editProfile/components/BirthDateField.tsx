@@ -2,7 +2,7 @@ import { BirthDateBottomSheet } from '@/ui/components/BirthDate/BirthDateBottomS
 import { useBirthDate } from '@/ui/components/BirthDate/useBirthDate';
 import { FormGroup } from '@/ui/components/FormGroup';
 import { InputApp } from '@/ui/components/Input';
-import { ProfileSchema } from '@/ui/screens/profile/schema';
+import { ProfileSchema } from '@/ui/screens/editProfile/schema';
 import { theme } from '@/ui/styles/theme';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { CalendarDaysIcon } from 'lucide-react-native';

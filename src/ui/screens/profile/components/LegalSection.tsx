@@ -1,5 +1,4 @@
-import { getDeleteAccountUrl, legal } from '@/app/config/legal';
-import { useAccount } from '@/app/hooks/queries/useAccount';
+import { legal } from '@/app/config/legal';
 import { openExternalUrl } from '@/app/libs/openExternalUrl';
 import { AppText } from '@/ui/components/AppText';
 import { styles } from '@/ui/screens/profile/styles';
@@ -13,38 +12,27 @@ const links = [
 ];
 
 export function LegalSection() {
-  const { email } = useAccount();
-
   return (
-    <View style={styles.planSection}>
+    <View style={styles.section}>
       <AppText size='sm' weight='medium' color={theme.colors.gray[700]}>
         Sobre
       </AppText>
-      <View style={styles.legalCard}>
-        {links.map((link) => (
+      <View style={styles.listCard}>
+        {links.map((link, index) => (
           <Pressable
             key={link.url}
             accessibilityRole='link'
             onPress={() => openExternalUrl(link.url)}
-            style={[styles.legalRow, styles.legalRowDivider]}
+            style={({ pressed }) => [
+              styles.listRow,
+              index < links.length - 1 && styles.listRowDivider,
+              pressed && styles.pressed,
+            ]}
           >
-            <AppText style={styles.legalRowText}>{link.label}</AppText>
+            <AppText style={styles.rowText}>{link.label}</AppText>
             <ChevronRightIcon size={18} color={theme.colors.gray[700]} />
           </Pressable>
         ))}
-        <Pressable
-          accessibilityRole='link'
-          onPress={() => openExternalUrl(getDeleteAccountUrl(email))}
-          style={styles.legalRow}
-        >
-          <View style={styles.legalRowText}>
-            <AppText>Excluir conta</AppText>
-            <AppText size='sm' color={theme.colors.gray[700]}>
-              Abrimos um e-mail para {legal.supportEmail} com o e-mail da sua conta. Se ele sair de outro endereço, confirmamos o pedido pelo e-mail da conta. Apagamos tudo em até 15 dias.
-            </AppText>
-          </View>
-          <ChevronRightIcon size={18} color={theme.colors.gray[700]} />
-        </Pressable>
       </View>
     </View>
   );

@@ -1,4 +1,5 @@
 import { EditGoals } from '@/ui/screens/editGoals';
+import { EditProfile } from '@/ui/screens/editProfile';
 import { Home } from '@/ui/screens/home';
 import { MealDetails } from '@/ui/screens/mealDetails';
 import { Plans } from '@/ui/screens/plans';
@@ -12,6 +13,7 @@ export type AppStackParamlist = {
   },
   EditGoals: undefined;
   Profile: undefined;
+  EditProfile: undefined;
   Plans: undefined;
 }
 
@@ -30,6 +32,7 @@ export function AppStack() {
       <Stack.Screen name="MealDetails" component={MealDetails} />
       <Stack.Screen name="EditGoals" component={EditGoals} />
       <Stack.Screen name="Profile" component={Profile} />
+      <Stack.Screen name="EditProfile" component={EditProfile} />
       <Stack.Screen name="Plans" component={Plans} />
     </Stack.Navigator>
   );

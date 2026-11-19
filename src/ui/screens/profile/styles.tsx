@@ -1,5 +1,5 @@
 import { theme } from '@/ui/styles/theme';
-import { StyleSheet } from 'react-native';
+import { Platform, StyleSheet } from 'react-native';
 
 export const styles = StyleSheet.create({
   container: {
@@ -11,22 +11,30 @@ export const styles = StyleSheet.create({
     paddingTop: 32,
     paddingHorizontal: 20,
     gap: 24,
-    paddingBottom: 32,
   },
 
-  avatar: {
-    alignItems: 'center',
-    marginBottom: 32,
+  pressed: {
+    opacity: Platform.OS === 'web' ? 0.4 : 0.7,
   },
 
-  footer: {
-    padding: 20,
-    borderTopWidth: 1,
-    borderColor: theme.colors.gray[400],
-  },
-
-  planSection: {
+  section: {
     gap: 8,
+  },
+
+  rowText: {
+    flex: 1,
+    gap: 2,
+  },
+
+  profileCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    backgroundColor: theme.colors.white,
+    borderWidth: 1,
+    borderColor: theme.colors.gray[400],
+    borderRadius: 16,
+    padding: 16,
   },
 
   planCard: {
@@ -53,6 +61,13 @@ export const styles = StyleSheet.create({
     paddingVertical: 4,
   },
 
+  planBadgeFree: {
+    backgroundColor: theme.colors.gray[200],
+    borderRadius: 20,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+  },
+
   installRow: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -68,7 +83,7 @@ export const styles = StyleSheet.create({
     backgroundColor: theme.colors.gray[200],
   },
 
-  legalCard: {
+  listCard: {
     backgroundColor: theme.colors.white,
     borderWidth: 1,
     borderColor: theme.colors.gray[400],
@@ -76,27 +91,42 @@ export const styles = StyleSheet.create({
     paddingHorizontal: 16,
   },
 
-  legalRow: {
+  listRow: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 12,
     paddingVertical: 14,
   },
 
-  legalRowDivider: {
+  listRowDivider: {
     borderBottomWidth: 1,
     borderColor: theme.colors.gray[400],
   },
 
-  legalRowText: {
-    flex: 1,
-    gap: 2,
+  sheet: {
+    paddingHorizontal: 24,
+    paddingTop: 10,
+    gap: 24,
   },
 
-  planBadgeFree: {
-    backgroundColor: theme.colors.gray[200],
-    borderRadius: 20,
-    paddingHorizontal: 10,
-    paddingVertical: 4,
+  sheetHeader: {
+    gap: 8,
+  },
+
+  sheetTitle: {
+    letterSpacing: -0.4,
+  },
+
+  sheetInfo: {
+    backgroundColor: theme.colors.gray[100],
+    borderWidth: 1,
+    borderColor: theme.colors.gray[400],
+    borderRadius: 16,
+    padding: 16,
+    gap: 8,
+  },
+
+  sheetFooter: {
+    gap: 8,
   },
 });

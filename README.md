@@ -35,7 +35,7 @@ Este repositório contém o **app frontend** (web + iOS + Android). O backend é
 - **Remover item e excluir refeição**: Na tela de detalhes, cada item tem um ícone de lixeira que remove na hora, com toast "Desfazer"; no fim da lista, "Excluir refeição" pede confirmação num bottom sheet. Remover o único item leva à mesma confirmação;
 - **Aviso do que não foi identificado**: Quando a IA vê algo na foto que não consegue identificar (copo opaco, embalagem fechada, recipiente tampado), um card discreto ("Tinha algo no copo?") aparece no lugar do botão "Adicionar item" e abre o mesmo modal com texto adaptado;
 - **Metas editáveis**: Override manual do plano derivado (calorias, proteínas, carboidratos e gorduras);
-- **Perfil editável**: Nome, data de nascimento, altura, peso e gênero; a seção "Sobre" abre os Termos de Uso e a Política de Privacidade (`www.nacal.app`) e o pedido de exclusão de conta por e-mail, já com o e-mail da conta no corpo (vem do `GET /me`), para o suporte saber qual conta excluir mesmo que o pedido saia de outro endereço (URLs, e-mail e `getDeleteAccountUrl` em `src/app/config/legal.ts`);
+- **Perfil**: tela de ajustes com um card de identidade (avatar, nome e "idade · altura · peso") que leva para `EditProfile`, onde ficam nome, data de nascimento, altura, peso e gênero; abaixo, Plano, instalação do app, "Sobre" (Termos de Uso e Política de Privacidade em `www.nacal.app`) e "Conta" (sair e excluir conta). "Excluir conta" abre o `DeleteAccountSheet`, que explica o processo e abre o pedido de exclusão por e-mail, já com o e-mail da conta no corpo (vem do `GET /me`), para o suporte saber qual conta excluir mesmo que o pedido saia de outro endereço (URLs, e-mail e `getDeleteAccountUrl` em `src/app/config/legal.ts`);
 - **Planos e assinatura**: Free com **20 refeições AI/mês** e Pro (**R$ 9,99/mês** ou **R$ 89,90/ano**) com **até 20 refeições AI por dia** (uso justo); **trial de 7 dias grátis** sem cartão (1 por conta), checkout via Asaas, cancelamento na tela de Planos (trial e mensal; o anual é pagamento único, sem renovação, então mostra "Acesso até" e não tem botão de cancelar; nos últimos 30 dias e depois de vencido o app avisa na Home, no Perfil e em Planos e oferece "Renovar") e ativação via webhook refletida em `GET /me`;
 - **Web + PWA**: Export estático instalável com ícones, manifest e splash, além dos builds nativos iOS e Android;
 - **Paridade web/nativo**: branching por `Platform.OS` para date picker, vídeo, toasts, handling de arquivos e animações;
@@ -61,7 +61,8 @@ Este repositório contém o **app frontend** (web + iOS + Android). O backend é
 | `Home`        | Calendário semanal, MacroRainbow, refeições do dia, FAB de criação e pull-to-refresh    |
 | `MealDetails` | Detalhes da refeição: status de processamento, calorias e macros (por alimento e total), "Adicionar item" (`AddItemModal`), remover item e excluir refeição (`DeleteMealSheet`) |
 | `EditGoals`   | Edição manual das metas diárias de calorias e macros                                    |
-| `Profile`     | Edição do perfil e acesso às metas                                                      |
+| `Profile`     | Ajustes: card do perfil, plano, instalar app, termos, sair e excluir conta (`DeleteAccountSheet`) |
+| `EditProfile` | Edição de nome, data de nascimento, altura, peso e gênero                               |
 | `Plans`       | Planos Free vs Pro, trial, cota mensal, checkout (Asaas), aviso com links de Termos e Privacidade antes do checkout e cancelamento |
 
 A troca entre as stacks é dirigida pelo `AuthContext`: `RootStack` renderiza `ConnectionError` quando a abertura do app não conseguiu carregar a conta por falha passageira (`sessionRestoreFailed`), `Auth` enquanto `!isSignedIn || shouldShowOnboarding`, e `App` caso contrário.
@@ -75,7 +76,8 @@ O app é dividido em **duas camadas** com path aliases definidos no `tsconfig.js
 │  src/ui  ·  apresentação  (alias @/ui/*)                         │
 │                                                                  │
 │  screens/     welcome · onboarding · forgotPassword              │
-│               home · mealDetails · editGoals · profile           │
+│               home · mealDetails · editGoals · profile ·         │
+│               editProfile                                        │
 │               (convenção: index.tsx · styles.ts · use*.ts        │
 │                · schema.ts)                                      │
 │  components/  AppText · Button · Input · MacroRainbow ·          │
@@ -331,7 +333,8 @@ src/
     │   ├── home/               # components/ (WeekCalendar, CurrentGoal, Fab, ...)
     │   ├── mealDetails/
     │   ├── editGoals/
-    │   ├── profile/
+    │   ├── profile/            # ajustes: ProfileCard, PlanSection, AccountSection, DeleteAccountSheet, ...
+    │   ├── editProfile/        # formulário do perfil (schema.ts, BirthDateField)
     │   ├── plans/               # index.tsx · styles.ts · usePlansScreen.ts · components/
     │   └── connectionError/     # falha ao carregar a conta na abertura do app (index.tsx · styles.ts)
     ├── hooks/
