@@ -54,7 +54,7 @@ export function ActivityLevelStep() {
                 <RadioGroupItemIcon>🤯</RadioGroupItemIcon>
                 <RadioGroupItemInfo>
                   <RadioGroupItemLabel>Atleta</RadioGroupItemLabel>
-                  <RadioGroupItemDescription>2 vezes por semana</RadioGroupItemDescription>
+                  <RadioGroupItemDescription>Treino intenso 2 vezes por dia</RadioGroupItemDescription>
                 </RadioGroupItemInfo>
               </RadioGroupItem>
             </RadioGroup>
