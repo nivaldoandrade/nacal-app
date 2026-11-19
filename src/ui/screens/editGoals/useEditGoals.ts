@@ -57,8 +57,12 @@ export function useEditGoals() {
     }
   });
 
+  const { isDirty, isValid, isSubmitting: isFormSubmitting } = form.formState;
+  const isSubmitting = isFormSubmitting || isPending;
+
   return {
-    isSubmitting: form.formState.isSubmitting || isPending,
+    isSubmitting,
+    canSubmit: isDirty && isValid && !isSubmitting,
     form,
     top,
     footerHeight,

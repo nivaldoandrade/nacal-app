@@ -12,6 +12,7 @@ export function EditGoals() {
 
   const {
     isSubmitting,
+    canSubmit,
     form,
     top,
     footerHeight,
@@ -76,7 +77,7 @@ export function EditGoals() {
             </ButtonApp>
             <ButtonApp
               style={{ flex: 1 }}
-              disabled={!form.formState.isValid || isSubmitting}
+              disabled={!canSubmit}
               isLoading={isSubmitting}
               onPress={handleSubmit}
             >
