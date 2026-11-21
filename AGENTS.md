@@ -16,6 +16,7 @@ Expo SDK 57 / React Native 0.86 / React 19 / TypeScript strict. Expo APIs change
 - `src/app`: static `Service` subclasses share one axios client (`Service.ts`) with a 401→refresh interceptor; TanStack Query hooks in `hooks/queries` + `hooks/mutations`; `navigation/RootStack.tsx` switches Auth vs App stack on `isSignedIn` / `shouldShowOnboarding`; tokens persist via `AuthTokenManager` (AsyncStorage).
 - `src/ui`: screens and components. Convention per feature folder: `index.tsx` + `styles.ts` + optional `use*.ts` hook + `schema.ts` (zod, paired with react-hook-form).
 - Data flow: screen → `use*` hook → query/mutation hook → Service → axios. Toasts: import from `@/app/libs/sonner` (platform-split: `sonner` on web, `sonner-native` on native).
+- Developer guide with Mermaid diagrams in `docs/guide/` (index `docs/guide/README.md`; flow pages in `docs/guide/fluxos/`, linked to the API guide). When a flow changes, update the matching page in the same commit.
 
 ## Gotchas
 

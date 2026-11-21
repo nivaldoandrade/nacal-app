@@ -6,6 +6,8 @@ Diferente de contadores de calorias tradicionais, não há busca manual de alime
 
 Este repositório contém o **app frontend** (web + iOS + Android). O backend é uma API serverless separada; ver [Documentação relacionada](#documentação-relacionada).
 
+> **Novo no projeto?** Comece pelo [Guia do app](docs/guide/README.md): visão geral, arquitetura do código, sessão, cache e fluxos com diagramas.
+
 ## Demonstração
 
 <!-- Preencha a URL quando houver deploy publicado. -->
@@ -226,7 +228,7 @@ EXPO_PUBLIC_COGNITO_DOMAIN=https://xxxx.auth.sa-east-1.amazoncognito.com
 EXPO_PUBLIC_COGNITO_CLIENT_ID=xxxxxxxxxxxxxxxxxxxxxxxxxx
 
 # Opcional: returnUrl do checkout web (deve bater com o allowlist APP_WEB_URL da API)
-# EXPO_PUBLIC_WEB_URL=https://192.168.100.21:8443
+# EXPO_PUBLIC_WEB_URL=https://<ip-da-sua-maquina-na-lan>:8443
 ```
 
 ### 4. Inicie a aplicação
@@ -241,7 +243,7 @@ yarn ios      # simulador/dispositivo iOS (expo run:ios)
 yarn android  # emulador/dispositivo Android (expo run:android)
 ```
 
-- **Web**: abre em `http://localhost:8081` (porta padrão do Metro);
+- **Web**: abre em `http://localhost:8081` (porta padrão do Metro). Para testar no celular (câmera e microfone exigem HTTPS), use um proxy HTTPS com certificado do mkcert; passo a passo em [Testar no celular em dev](docs/guide/06-plataformas-build-deploy.md#testar-no-celular-em-dev);
 - **iOS/Android**: a primeira execução gera as pastas `ios/` e `android/` via prebuild (essas pastas são gitignored).
 
 ## Variáveis de ambiente
@@ -419,6 +421,7 @@ O deploy de produção usa o Worker `nacal-app` em `app.nacal.app`:
 
 | Documento                                                | Conteúdo                                                                 |
 | -------------------------------------------------------- | ------------------------------------------------------------------------ |
+| [Guia do app](docs/guide/README.md)                      | Guia para devs com diagramas: arquitetura, sessão, cache, erros, plataformas e um fluxo por funcionalidade |
 | [`PRODUCT.md`](./PRODUCT.md)                             | Plataforma, usuários, capacidades, restrições e princípios do produto    |
 | [`DESIGN.md`](./DESIGN.md)                               | Design system: cores, tipografia, layout, componentes e regras nomeadas  |
 | [`AGENTS.md`](./AGENTS.md)                               | Convenções do código, comandos e gotchas (o `CLAUDE.md` aponta para ele) |
@@ -452,7 +455,7 @@ O deploy de produção usa o Worker `nacal-app` em `app.nacal.app`:
 - O fluxo é Authorization Code + PKCE (`useSocialAuth.ts`); veja também o fluxo OAuth na documentação da API.
 
 ### Refeição fica em `PROCESSING` (ou nunca atualiza)
-- O status é acompanhado pelo `useGetMealById` no modal de criação e na tela de detalhes (polling de 3s);
+- O status é acompanhado pelo `useGetMealById` no modal de criação (2 s nos primeiros 20 s, depois com backoff até 10 s, por até 3 min) e na tela de detalhes (a cada 2 s);
 - Na home, o refresh é manual: use o pull-to-refresh (`staleTime: Infinity`);
 - O polling termina em `SUCCESS`, `REJECTED` ou `FAILED`; se ficar em `FAILED`, veja os logs da Lambda `processMeal` na API.
 
